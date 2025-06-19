@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Sistem Kasir{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <header class="bg-blue-600 text-white p-4 shadow">
+    <div class="container mx-auto">
+      <h1 class="text-2xl font-bold">Sistem Manajemen Penjualan</h1>
+    </div>
+  </header>
+
+  <main class="container mx-auto p-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-gray-200 text-center p-2 mt-10">
+    <p class="text-sm">&copy; 2025 Toko POS</p>
+  </footer>
+</body>
+</html>
