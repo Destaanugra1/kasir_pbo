@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-bold mb-4">Hapus Produk</h2>
+<p>Yakin ingin menghapus produk "{{ produk.name }}"?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded">Ya, Hapus</button>
+  <a href="{% url 'product_list' %}" class="ml-2">Batal</a>
+</form>
+{% endblock %}

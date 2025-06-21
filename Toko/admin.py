@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import (
     Category, Product, Customer, Order, OrderItem, Payment,
-    Supplier, Purchase, PurchaseItem, Return, Cashier
+    Supplier, Purchase, PurchaseItem, Return, Cashier, UserProfile
 )
 
+admin.site.register(UserProfile)
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description')

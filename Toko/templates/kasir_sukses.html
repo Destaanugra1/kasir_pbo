@@ -1,0 +1,36 @@
+{% extends "base.html" %} {% block content %}
+<h2 class="text-xl font-bold mb-4">Transaksi Berhasil!</h2>
+<p>Order #{{ order.id }} telah disimpan.</p>
+<hr class="my-2" />
+<h3 class="font-semibold">Struk/Nota:</h3>
+<p>Pelanggan: {{ customer.name }}</p>
+<p>Kasir: {{ cashier.user.username }}</p>
+<table class="table-auto w-full mt-2">
+  <tr>
+    <th>Produk</th>
+    <th>Qty</th>
+    <th>Harga</th>
+    <th>Subtotal</th>
+  </tr>
+  {% for item in order_items %}
+  <tr>
+    <td>{{ item.produk.name }}</td>
+    <td>{{ item.qty }}</td>
+    <td>Rp{{ item.produk.price }}</td>
+    <td>Rp{{ item.subtotal }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="mt-2 font-bold">Total: Rp{{ total }}</p>
+<a
+  href="{% url 'cetak_struk' order.id %}"
+  target="_blank"
+  class="bg-green-500 text-white px-3 py-1 rounded mt-4 inline-block"
+  >Cetak Struk (PDF)</a
+>
+<a
+  href="{% url 'kasir' %}"
+  class="bg-blue-500 text-white px-3 py-1 rounded mt-4 inline-block"
+  >Transaksi Baru</a
+>
+{% endblock %}

@@ -1,0 +1,15 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-10 bg-white p-6 rounded shadow">
+  <h2 class="text-xl font-bold mb-4">Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+  </form>
+  {% if form.errors %}
+    <p class="text-red-500 mt-2">Username atau password salah.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %} {% block content %}
+<h2 class="text-xl font-bold mb-4">Daftar Produk</h2>
+{% if user.groups.all.0.name == "Admin" %}
+<a
+  href="{% url 'product_create' %}"
+  class="bg-blue-500 text-white px-3 py-1 rounded"
+  >Tambah Produk</a
+>
+{% endif %}
+<table class="table-auto w-full mt-4">
+  <tr>
+    <th>Nama</th>
+    <th>Harga</th>
+    <th>Stok</th>
+    {% if user.groups.all.0.name == "Admin" %}
+    <th>Aksi</th>
+    {% endif %}
+  </tr>
+  {% for produk in produk_list %}
+  <tr>
+    <td>{{ produk.name }}</td>
+    <td>Rp{{ produk.price }}</td>
+    <td>{{ produk.stock }}</td>
+    {% if user.groups.all.0.name == "Admin" %}
+    <td>
+      <a href="{% url 'product_update' produk.pk %}" class="text-blue-600"
+        >Edit</a
+      >
+      |
+      <a href="{% url 'product_delete' produk.pk %}" class="text-red-600"
+        >Hapus</a
+      >
+    </td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
