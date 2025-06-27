@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Retur Produk</h2>
+
+  <!-- Menampilkan Nama Produk yang akan diretur -->
+  <div class="mb-6 text-center">
+    <p class="text-lg text-gray-700">Anda sedang mengembalikan produk: <strong>{{ produk.name }}</strong></p>
+    <p class="text-gray-600">Harga: Rp{{ produk.price }} | Stok Tersedia: {{ produk.stock }}</p>
+  </div>
+
+  <!-- Formulir Retur -->
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label for="id_reason" class="block text-gray-600">Alasan Retur</label>
+      {{ form.reason }}
+    </div>
+
+    <div class="mb-4">
+      <label for="id_quantity" class="block text-gray-600">Jumlah Retur</label>
+      {{ form.quantity }}
+    </div>
+
+    <div class="mb-6 text-right">
+      <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg shadow-lg transition duration-300">
+        Kirim Retur
+      </button>
+    </div>
+  </form>
+{% endblock %}

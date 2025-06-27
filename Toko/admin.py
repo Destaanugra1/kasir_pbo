@@ -16,6 +16,8 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'price', 'stock', 'category', 'supplier')
     search_fields = ('name',)
     list_filter = ('category', 'supplier')
+    fields = ('name', 'price', 'stock', 'category', 'supplier', 'image') 
+    list_editable = ('price', 'stock', 'name')
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):

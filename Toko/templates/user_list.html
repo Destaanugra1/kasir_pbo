@@ -1,22 +1,46 @@
 <!-- filepath: d:\Semester 4\pemerograman Berbasis Objek\UAS\penjualanToko\Toko\templates\user_list.html -->
 {% extends "base.html" %}
 {% block content %}
-<h2 class="text-xl font-bold mb-4">Daftar User</h2>
-<a href="{% url 'user_create' %}" class="bg-blue-500 text-white px-3 py-1 rounded">Tambah User</a>
-<table class="table-auto w-full mt-4">
-  <tr>
-    <th>Username</th><th>Nama</th><th>Email</th><th>Role</th><th>Aksi</th>
-  </tr>
-  {% for user in users %}
-  <tr>
-    <td>{{ user.username }}</td>
-    <td>{{ user.get_full_name }}</td>
-    <td>{{ user.email }}</td>
-    <td>{{ user.userprofile.get_role_display }}</td>
-    <td>
-      <a href="{% url 'user_update' user.pk %}" class="text-blue-600">Edit</a>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+<h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Daftar User</h2>
+
+<!-- Menampilkan Role User Login -->
+<p class="mb-4 text-center text-gray-600">
+  Role Anda: {% for group in user.groups.all %} {{ group.name }} {% endfor %}
+</p>
+
+<div class="flex justify-end mb-4">
+  <a href="{% url 'user_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+    <i class="fas fa-user-plus mr-2"></i>Tambah User
+  </a>
+</div>
+
+<div class="overflow-x-auto bg-white shadow-lg rounded-lg">
+  <table class="min-w-full text-sm text-left text-gray-600">
+    <thead class="bg-blue-100 text-blue-700">
+      <tr>
+        <th class="px-6 py-3">Nama</th>
+        <th class="px-6 py-3">Username</th>
+        <th class="px-6 py-3">Email</th>
+        <th class="px-6 py-3">Role</th>
+        <th class="px-6 py-3">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr class="border-b hover:bg-gray-50">
+        <td class="px-6 py-4">{{ u.get_full_name|default:u.username }}</td>
+        <td class="px-6 py-4">{{ u.username }}</td>
+        <td class="px-6 py-4">{{ u.email }}</td>
+        <td class="px-6 py-4">
+          {% if u.userprofile %}{{ u.userprofile.role|title }}{% else %}-{% endif %}
+        </td>
+        <td class="px-6 py-4 space-x-2">
+          <a href="{% url 'user_update' u.pk %}" class="text-blue-600 hover:text-blue-800">Edit</a>
+          <!-- Hapus user opsional, tambahkan jika ada view-nya -->
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

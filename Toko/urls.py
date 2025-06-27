@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views 
 from .views import CustomLoginView
+from django.contrib import admin
 
 
 urlpatterns = [
@@ -18,4 +19,7 @@ urlpatterns = [
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', views.CustomLoginView.as_view(), name='logout'),
     path('kasir/struk/<int:order_id>/', views.cetak_struk, name='cetak_struk'),
+    path('retur/<int:product_id>/', views.create_return, name='create_return'),
+    path('pesanan/<int:pk>/', views.order_detail, name='order_detail'),
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]

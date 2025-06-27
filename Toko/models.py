@@ -57,7 +57,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name=_("Nama Produk"))
     description = models.TextField(verbose_name=_("Deskripsi"))
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Harga Jual"))
-    cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Harga Modal"))
+    cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Harga Modal"), default=0)  # Menambahkan default
     stock = models.PositiveIntegerField(verbose_name=_("Stok"))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products", verbose_name=_("Kategori"))
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Supplier"))
@@ -69,6 +69,7 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name=_("Pengguna"))
@@ -102,6 +103,7 @@ class Order(models.Model):
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_("Diskon"))
     total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Total Bayar"))
     is_paid = models.BooleanField(default=False, verbose_name=_("Sudah Dibayar"))
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = _("Pesanan")
@@ -171,6 +173,7 @@ class Return(models.Model):
     order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, verbose_name=_("Item Pesanan"))
     reason = models.TextField(verbose_name=_("Alasan Retur"))
     return_date = models.DateTimeField(auto_now_add=True, verbose_name=_("Tanggal Retur"))
+    quantity = models.PositiveIntegerField(verbose_name=_("Jumlah Retur"))
 
     class Meta:
         verbose_name = _("Retur")
