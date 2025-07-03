@@ -14,6 +14,10 @@ from xhtml2pdf import pisa
 from django.db.models import F
 
 # Custom decorator: hanya kasir yang bisa akses, admin tidak bisa
+
+def home(request):
+    return render(request, 'home.html')
+
 def kasir_only(view_func):
     def _wrapped_view(request, *args, **kwargs):
         user = request.user

@@ -1,3 +1,4 @@
+{% load dict_extras idr %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,8 +23,8 @@
         <tr>
             <td>{{ item.product.name }}</td>
             <td>{{ item.quantity }}</td>
-            <td>Rp{{ item.price }}</td>
-            <td>Rp{{ item.price|floatformat:0|add:item.quantity|floatformat:0 }}</td>
+            <td>Rp{{ item.price|idr }}</td>
+            <td>Rp{{ item.price|idr|add:item.quantity|idr}}</td>
         </tr>
         {% endfor %}
     </table>

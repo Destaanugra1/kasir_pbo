@@ -1,30 +1,197 @@
-{% extends "base.html" %} {% load static %} {% block title %}
- Beranda 
- {%endblock %} 
- 
- 
- {% block content %}
-<h2 class="text-xl font-semibold mb-4">Selamat Datang di Sistem Kasir</h2>
-<p class="mb-4">Berikut produk yang tersedia:</p>
+{% extends "sidebar.html" %}
+{% load static %}
+{% block title %}Beranda{% endblock %}
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-  {% for produk in produk_list %}
-  <div class="bg-white shadow rounded-lg p-4">
-    {% if produk.image %}
-    <img
-      src="{{ produk.image.url }}"
-      alt="{{ produk.name }}"
-      class="w-full h-32 object-cover rounded mb-3" />
-    {% else %}
-    <img
-      src="{% static 'images/noimage.png' %}"
-      alt="No Image"
-      class="w-full h-32 object-cover rounded mb-3" />
-    {% endif %}
-    <h3 class="font-bold text-lg mb-2">{{ produk.name }}</h3>
-    <p class="text-sm text-gray-700 mb-1">Harga: Rp{{ produk.price }}</p>
-    <p class="text-sm text-gray-500">Stok: {{ produk.stock }}</p>
+{% block content %}
+<div class="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header Section -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6 animate-pulse">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        Selamat Datang di Sistem Kasir
+      </h1>
+      <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+        Jelajahi produk-produk berkualitas kami dengan pilihan terbaik untuk kebutuhan Anda
+      </p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-8">
+      <div class="max-w-md mx-auto bg-white rounded-full shadow-md flex items-center overflow-hidden p-1">
+        <input type="text" id="searchInput" placeholder="Cari produk..." class="w-full px-4 py-2 focus:outline-none">
+        <button class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productsGrid">
+      {% for produk in produk_list %}
+      <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:transform hover:scale-[1.02] product-card" data-id="{{ produk.id }}" data-name="{{ produk.name|lower }}">
+        <div class="relative">
+          {% if produk.image %}
+          <img
+            src="{{ produk.image.url }}"
+            alt="{{ produk.name }}"
+            class="w-full h-48 object-cover" />
+          {% else %}
+          <img
+            src="{% static 'images/noimage.png' %}"
+            alt="No Image"
+            class="w-full h-48 object-cover" />
+          {% endif %}
+          
+          {% if produk.stock > 10 %}
+            <span class="absolute top-2 right-2 bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
+              Tersedia
+            </span>
+          {% elif produk.stock > 0 %}
+            <span class="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full">
+              Terbatas
+            </span>
+          {% else %}
+            <span class="absolute top-2 right-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+              Habis
+            </span>
+          {% endif %}
+        </div>
+        
+        <div class="p-5">
+          <h3 class="font-bold text-xl text-gray-800 mb-2 line-clamp-1">{{ produk.name }}</h3>
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-lg font-bold text-blue-600">Rp{{ produk.price|floatformat:0 }}</div>
+            <div class="text-sm text-gray-600">Stok: {{ produk.stock }}</div>
+          </div>
+          <div class="text-sm text-gray-600 h-12 line-clamp-2 mb-4">
+            {% if produk.description %}
+              {{ produk.description }}
+            {% else %}
+              Tidak ada deskripsi produk
+            {% endif %}
+          </div>
+          <div class="flex space-x-2">
+            <button onclick="showProductDetails({{ produk.id }})" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-3 rounded-lg transition-colors text-sm font-medium">
+              Detail
+            </button>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full py-16 flex flex-col items-center justify-center">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-semibold text-gray-800 mb-2">Belum Ada Produk</h3>
+        <p class="text-gray-500">Produk akan ditampilkan di sini setelah ditambahkan</p>
+      </div>
+      {% endfor %}
+    </div>
   </div>
-  {% endfor %}
 </div>
+
+<!-- Modal untuk Detail Produk -->
+<div id="productModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-2xl max-w-lg w-full mx-4 overflow-hidden shadow-2xl transform transition-all">
+    <div class="relative">
+      <div id="modalImage" class="w-full h-64 bg-gray-200 object-cover"></div>
+      <button onclick="closeProductModal()" class="absolute top-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white transition-colors">
+        <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-6">
+      <h3 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-3"></h3>
+      <div class="flex items-center justify-between mb-4">
+        <div id="modalPrice" class="text-xl font-bold text-blue-600"></div>
+        <div id="modalStock" class="px-3 py-1 rounded-full text-sm font-medium"></div>
+      </div>
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-600 uppercase mb-2">Deskripsi</h4>
+        <div id="modalDescription" class="text-gray-600 text-sm"></div>
+      </div>
+      <div class="flex space-x-3">
+        <button onclick="closeProductModal()" class="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+          Tutup
+        </button> 
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fungsi JavaScript untuk modal -->
+<script>
+  // Search functionality
+  document.getElementById('searchInput').addEventListener('input', function() {
+    const searchValue = this.value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+      const productName = card.getAttribute('data-name');
+      if (productName.includes(searchValue)) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+  
+  // Product modal functionality
+  function showProductDetails(productId) {
+    // Get the product card with the specific ID
+    const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+    const modal = document.getElementById('productModal');
+    
+    if (productCard) {
+      const image = productCard.querySelector('img').src;
+      const title = productCard.querySelector('h3').textContent.trim();
+      const price = productCard.querySelector('.text-blue-600').textContent;
+      
+      // Mencari elemen stok dengan benar (menggunakan selector yang lebih spesifik)
+      const stockElem = productCard.querySelector('.text-sm.text-gray-600');
+      const stock = stockElem ? stockElem.textContent.replace('Stok: ', '') : '0';
+      
+      // Mengambil deskripsi lengkap (tanpa line clamp)
+      const descriptionElem = productCard.querySelector('.line-clamp-2');
+      const description = descriptionElem ? descriptionElem.textContent.trim() : 'Tidak ada deskripsi';
+      
+      document.getElementById('modalImage').style.backgroundImage = `url(${image})`;
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalPrice').textContent = price;
+      
+      // Mengatur warna status stok
+      const stockNum = parseInt(stock);
+      if (stockNum > 10) {
+        document.getElementById('modalStock').textContent = `Tersedia (${stock})`;
+        document.getElementById('modalStock').className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800';
+      } else if (stockNum > 0) {
+        document.getElementById('modalStock').textContent = `Terbatas (${stock})`;
+        document.getElementById('modalStock').className = 'px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800';
+      } else {
+        document.getElementById('modalStock').textContent = `Habis`;
+        document.getElementById('modalStock').className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+      }
+      
+      // Set deskripsi produk
+      document.getElementById('modalDescription').textContent = description;
+      
+      // Tampilkan modal
+      modal.classList.remove('hidden');
+    }
+  }
+  
+  function closeProductModal() {
+    document.getElementById('productModal').classList.add('hidden');
+  }
+</script>
 {% endblock %}

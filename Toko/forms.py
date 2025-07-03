@@ -20,7 +20,7 @@ class UserForm(forms.ModelForm):
             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 hover:border-red-400 pr-12',
             'placeholder': 'Masukkan password'
         }), 
-        required=False
+        required=True  # Pastikan wajib diisi saat tambah user
     )
     
     class Meta:

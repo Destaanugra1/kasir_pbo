@@ -6,7 +6,8 @@ from django.contrib import admin
 
 
 urlpatterns = [
-    path('', views.beranda, name='beranda'),
+    path('', views.home, name='home'),
+    path('beranda/', views.beranda, name='beranda'),
     path('produk/', views.product_list, name='product_list'),
     path('produk/tambah/', views.product_create, name='product_create'),
     path('produk/<int:pk>/edit/', views.product_update, name='product_update'),

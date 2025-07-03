@@ -1,15 +1,232 @@
-
-{% extends "base.html" %}
 {% block content %}
-<div class="max-w-sm mx-auto mt-10 bg-white p-6 rounded shadow">
-  <h2 class="text-xl font-bold mb-4">Login</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
-  </form>
-  {% if form.errors %}
-    <p class="text-red-500 mt-2">Username atau password salah.</p>
-  {% endif %}
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+  </head>
+  </head>
+  <body>
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8 bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden p-8 border border-white/20">
+    <div class="text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-5 animate-pulse">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+      </div>
+      <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">Selamat Datang</h2>
+      <p class="text-gray-500">Masuk ke akun Anda untuk melanjutkan</p>
+    </div>
+    
+    {% if form.errors %}
+    <div id="error-message" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-3 flex-grow">
+          <p class="text-sm font-medium text-red-800">
+            {% if form.username.errors %}
+              Username tidak valid: {{ form.username.errors|striptags }}
+            {% elif form.password.errors %}
+              Password tidak valid: {{ form.password.errors|striptags }}
+            {% else %}
+              Username atau password salah. Silakan coba lagi.
+            {% endif %}
+          </p>
+        </div>
+        <button type="button" id="close-error" class="text-red-500 hover:text-red-700">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+    
+    {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="bg-{{ message.tags|default:'blue' }}-50 border-l-4 border-{{ message.tags|default:'blue' }}-500 p-4 rounded-lg mb-2">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-{{ message.tags|default:'blue' }}-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-{{ message.tags|default:'blue' }}-800">{{ message }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form class="mt-8 space-y-6" method="post" id="login-form">
+      {% csrf_token %}
+      <div class="rounded-md shadow-sm space-y-4">
+        <div>
+          <label for="id_username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <div class="relative rounded-lg">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+            </div>
+            <input id="id_username" name="username" type="text" required 
+                   class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border {% if form.username.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-lg bg-white/70 placeholder-gray-500 text-gray-900 focus:outline-none" 
+                   placeholder="Username" value="{{ form.username.value|default:'' }}">
+            {% if form.username.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.username.errors|striptags }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <div>
+          <label for="id_password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <div class="relative rounded-lg">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+            </div>
+            <input id="id_password" name="password" type="password" required 
+                   class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border {% if form.password.errors %}border-red-500{% else %}border-gray-300{% endif %} rounded-lg bg-white/70 placeholder-gray-500 text-gray-900 focus:outline-none" 
+                   placeholder="Password">
+            {% if form.password.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.password.errors|striptags }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <input id="remember-me" name="remember" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+          <label for="remember-me" class="ml-2 block text-sm text-gray-700">Ingat saya</label>
+        </div>
+      </div>
+
+      <div>
+        <button type="submit" id="login-button" class="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-[1.02]">
+          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <svg class="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+            </svg>
+          </span>
+          <span id="button-text">Masuk</span>
+          <span id="button-loading" class="hidden">
+            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </form>
+    
+    <div class="mt-6 text-center">
+      <div class="relative py-3">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center">
+          <span class="px-2 bg-white text-sm text-gray-500">atau</span>
+        </div>
+      </div>
+      
+      <p class="mt-2 text-sm text-gray-600">
+        Belum punya akun? <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Hubungi administrator</a>
+      </p>
+    </div>
+  </div>
 </div>
+
+<script>
+  // Script untuk validasi form client-side
+  document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    const buttonText = document.getElementById('button-text');
+    const buttonLoading = document.getElementById('button-loading');
+    const usernameInput = document.getElementById('id_username');
+    const passwordInput = document.getElementById('id_password');
+    const closeErrorBtn = document.getElementById('close-error');
+    const errorMessage = document.getElementById('error-message');
+    
+    if (closeErrorBtn && errorMessage) {
+      closeErrorBtn.addEventListener('click', function() {
+        errorMessage.style.display = 'none';
+      });
+    }
+    
+    if (loginForm) {
+      loginForm.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Validasi username tidak kosong
+        if (!usernameInput.value.trim()) {
+          showInputError(usernameInput, 'Username tidak boleh kosong');
+          isValid = false;
+        } else {
+          clearInputError(usernameInput);
+        }
+        
+        // Validasi password tidak kosong
+        if (!passwordInput.value.trim()) {
+          showInputError(passwordInput, 'Password tidak boleh kosong');
+          isValid = false;
+        } else {
+          clearInputError(passwordInput);
+        }
+        
+        if (isValid) {
+          // Tampilkan loading state
+          buttonText.classList.add('hidden');
+          buttonLoading.classList.remove('hidden');
+          loginButton.disabled = true;
+          
+          // Proses form secara normal
+          return true;
+        } else {
+          e.preventDefault();
+          return false;
+        }
+      });
+    }
+    
+    function showInputError(input, message) {
+      input.classList.add('border-red-500');
+      input.classList.remove('border-gray-300');
+      
+      // Tambahkan pesan error di bawah input
+      let errorElement = input.parentNode.nextElementSibling;
+      if (!errorElement || !errorElement.classList.contains('text-red-600')) {
+        errorElement = document.createElement('p');
+        errorElement.classList.add('mt-1', 'text-sm', 'text-red-600');
+        input.parentNode.parentNode.appendChild(errorElement);
+      }
+      errorElement.textContent = message;
+    }
+    
+    function clearInputError(input) {
+      input.classList.remove('border-red-500');
+      input.classList.add('border-gray-300');
+      
+      // Hapus pesan error jika ada
+      let errorElement = input.parentNode.nextElementSibling;
+      if (errorElement && errorElement.classList.contains('text-red-600')) {
+        errorElement.textContent = '';
+      }
+    }
+  });
+</script>
+  </body>
+</html>
 {% endblock %}

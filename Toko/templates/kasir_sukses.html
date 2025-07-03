@@ -1,36 +1,103 @@
-{% extends "base.html" %} {% block content %}
-<h2 class="text-xl font-bold mb-4">Transaksi Berhasil!</h2>
-<p>Order #{{ order.id }} telah disimpan.</p>
-<hr class="my-2" />
-<h3 class="font-semibold">Struk/Nota:</h3>
-<p>Pelanggan: {{ customer.name }}</p>
-<p>Kasir: {{ cashier.user.username }}</p>
-<table class="table-auto w-full mt-2">
-  <tr>
-    <th>Produk</th>
-    <th>Qty</th>
-    <th>Harga</th>
-    <th>Subtotal</th>
-  </tr>
-  {% for item in order_items %}
-  <tr>
-    <td>{{ item.produk.name }}</td>
-    <td>{{ item.qty }}</td>
-    <td>Rp{{ item.produk.price }}</td>
-    <td>Rp{{ item.subtotal }}</td>
-  </tr>
-  {% endfor %}
-</table>
-<p class="mt-2 font-bold">Total: Rp{{ total }}</p>
-<a
-  href="{% url 'cetak_struk' order.id %}"
-  target="_blank"
-  class="bg-green-500 text-white px-3 py-1 rounded mt-4 inline-block"
-  >Cetak Struk (PDF)</a
->
-<a
-  href="{% url 'kasir' %}"
-  class="bg-blue-500 text-white px-3 py-1 rounded mt-4 inline-block"
-  >Transaksi Baru</a
->
+{% extends "sidebar.html" %} 
+{% load l10n %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+  <!-- Success Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+    <h2 class="text-3xl font-bold text-gray-800 mb-2">Transaksi Berhasil!</h2>
+    <p class="text-gray-600">Order #{{ order.id }} telah disimpan dengan sukses</p>
+  </div>
+
+  <!-- Receipt Card -->
+  <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+    <!-- Receipt Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-semibold mb-2">Struk Pembayaran</h3>
+          <div class="text-blue-100">
+            <p class="mb-1">📧 Pelanggan: {{ customer.name }}</p>
+            <p>👤 Kasir: {{ cashier.user.username }}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="bg-white/20 rounded-lg p-3">
+            <p class="text-sm text-blue-100">Order ID</p>
+            <p class="text-lg font-bold">#{{ order.id }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receipt Body -->
+    <div class="p-6">
+      <!-- Items Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b-2 border-gray-200">
+              <th class="text-left py-3 px-2 font-semibold text-gray-700">Produk</th>
+              <th class="text-center py-3 px-2 font-semibold text-gray-700">Qty</th>
+              <th class="text-right py-3 px-2 font-semibold text-gray-700">Harga</th>
+              <th class="text-right py-3 px-2 font-semibold text-gray-700">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order_items %}
+            <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+              <td class="py-3 px-2">
+                <div class="font-medium text-gray-800">{{ item.produk.name }}</div>
+              </td>
+              <td class="py-3 px-2 text-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ item.qty }}
+                </span>
+              </td>
+              <td class="py-3 px-2 text-right text-gray-600">Rp{{ item.produk.price|localize }}</td>
+              <td class="py-3 px-2 text-right font-medium text-gray-800">Rp{{ item.subtotal|localize }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Total Section -->
+      <div class="mt-6 border-t-2 border-gray-200 pt-4">
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-semibold text-gray-700">Total Pembayaran:</span>
+          <span class="text-2xl font-bold text-green-600">Rp{{ total }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+    <a
+      href="{% url 'cetak_struk' order.id %}"
+      target="_blank"
+      class="inline-flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+      </svg>
+      Cetak Struk (PDF)
+    </a>
+    
+    <a
+      href="{% url 'kasir' %}"
+      class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 transform hover:scale-105"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Transaksi Baru
+    </a>
+  </div>
+</div>
 {% endblock %}
