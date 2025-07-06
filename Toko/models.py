@@ -55,9 +55,10 @@ class Supplier(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name=_("Nama Produk"))
+    barcode = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name=_("Barcode"))  # Tambahkan ini
     description = models.TextField(verbose_name=_("Deskripsi"))
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Harga Jual"))
-    cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Harga Modal"), default=0)  # Menambahkan default
+    cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Harga Modal"), default=0)
     stock = models.PositiveIntegerField(verbose_name=_("Stok"))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products", verbose_name=_("Kategori"))
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Supplier"))
@@ -69,6 +70,7 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
 
 
 class Customer(models.Model):

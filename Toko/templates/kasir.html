@@ -1,33 +1,33 @@
-{% extends "sidebar.html" %} {% block content %}
+{% extends "sidebar.html" %} 
 {% load dict_extras idr %}
+
+{% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header Section -->
     <div class="text-center mb-8">
-      <div
-        class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6 shadow-md">
-        <svg
-          class="w-8 h-8 text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6 shadow-md">
+        <svg class="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       </div>
       <h1 class="text-3xl font-semibold text-gray-900 mb-2">Sistem Kasir</h1>
       <p class="text-gray-600">Kelola transaksi dengan mudah</p>
     </div>
 
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Scan Barcode Produk</h2>
+        <button onclick="startScan()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">
+          Mulai Scan
+        </button>
+      </div>
+      <div id="qr-reader" class="w-full h-52 rounded-lg overflow-hidden bg-gray-100"></div>
+      <p id="qr-reader-result" class="mt-2 text-sm text-gray-600"></p>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Products Section -->
       <div class="lg:col-span-2">
-        <div
-          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <!-- Products Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div class="bg-gray-100 px-6 py-4">
             <div class="flex items-center justify-between">
               <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
@@ -37,50 +37,37 @@
             </div>
           </div>
 
-          <!-- Products Form -->
           <form method="post" id="kasir-form" class="p-6">
             {% csrf_token %}
             <div class="space-y-4">
               {% for produk in produk_list %}
-              <div
-                class="group bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-all duration-200">
+              <div class="group bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-all duration-200">
                 <div class="flex items-center justify-between">
-                  <!-- Product Info -->
                   <div class="flex items-center space-x-4">
-                    <div
-                      class="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                      <span class="text-gray-700 font-semibold text-lg"
-                        >{{ produk.name|first|upper }}</span
-                      >
+                    <div class="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                      <span class="text-gray-700 font-semibold text-lg">{{ produk.name|first|upper }}</span>
                     </div>
                     <div>
-                      <h3
-                        class="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-200">
+                      <h3 class="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-200">
                         {{ produk.name }}
                       </h3>
                       <div class="mt-2">
                         <div class="flex items-center space-x-4">
-                          <span class="text-lg font-semibold text-gray-900"
-                            >Rp{{ produk.price|idr }}</span
-                          >
+                          <span class="text-lg font-semibold text-gray-900">Rp{{ produk.price|idr }}</span>
                           {% if produk.stock > 10 %}
-                          <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                             {{ produk.stock }} tersedia
                           </span>
                           {% elif produk.stock > 5 %}
-                          <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                             {{ produk.stock }} tersedia
                           </span>
                           {% elif produk.stock > 0 %}
-                          <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
                             {{ produk.stock }} tersedia
                           </span>
                           {% else %}
-                          <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
+                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
                             Stok habis
                           </span>
                           {% endif %}
@@ -89,60 +76,26 @@
                     </div>
                   </div>
 
-                  <!-- Quantity Controls -->
                   <div class="flex items-center space-x-4">
-                    <div
-                      class="flex items-center space-x-3 bg-white rounded-xl p-3 border border-gray-200">
-                      <button
-                        type="button"
-                        onclick="decreaseQty('qty_{{ produk.pk }}')"
-                        class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
-                        <svg
-                          class="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M20 12H4" />
+                    <div class="flex items-center space-x-3 bg-white rounded-xl p-3 border border-gray-200">
+                      <button type="button" onclick="decreaseQty('qty_{{ produk.pk }}')" class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                         </svg>
                       </button>
 
-                      <input
-                        type="number"
-                        name="qty_{{ produk.pk }}"
-                        id="qty_{{ produk.pk }}"
-                        min="0"
-                        max="{{ produk.stock }}"
-                        value="0"
-                        onchange="updateTotal()"
-                        class="w-16 h-10 text-center text-lg font-semibold border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200" />
+                      <input type="number" name="qty_{{ produk.pk }}" id="qty_{{ produk.pk }}" min="0" max="{{ produk.stock }}" value="0" onchange="updateTotal()" class="w-16 h-10 text-center text-lg font-semibold border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200" />
 
-                      <button
-                        type="button"
-                        onclick="increaseQty('qty_{{ produk.pk }}', {{ produk.stock }})"
-                        class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
-                        <svg
-                          class="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <button type="button" onclick="increaseQty('qty_{{ produk.pk }}', {{ produk.stock }})" class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                       </button>
                     </div>
 
                     <div class="text-right">
                       <p class="text-sm text-gray-500">Subtotal</p>
-                      <p
-                        class="text-lg font-semibold text-gray-900"
-                        id="subtotal_{{ produk.pk }}">
+                      <p class="text-lg font-semibold text-gray-900" id="subtotal_{{ produk.pk }}">
                         Rp0
                       </p>
                     </div>
@@ -151,18 +104,9 @@
               </div>
               {% empty %}
               <div class="text-center py-16">
-                <div
-                  class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    class="w-10 h-10 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">
@@ -175,11 +119,8 @@
               {% endfor %}
             </div>
 
-            <!-- Add to Cart Button -->
             <div class="mt-6 text-center">
-              <button
-                type="submit"
-                class="inline-flex items-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200">
+              <button type="submit" class="inline-flex items-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200">
                 Tambah ke Keranjang
               </button>
             </div>
@@ -187,38 +128,27 @@
         </div>
       </div>
 
-      <!-- Cart Section -->
       <div class="lg:col-span-1">
-        <div
-          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
-          <!-- Cart Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
           <div class="bg-gray-100 px-6 py-4">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-semibold text-gray-800">
                 Keranjang Belanja
               </h3>
-              <div
-                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                <span class="text-gray-700 font-bold text-sm"
-                  >{{ keranjang_items|length }}</span
-                >
+              <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <span class="text-gray-700 font-bold text-sm">{{ keranjang_items|length }}</span>
               </div>
             </div>
           </div>
 
-          <!-- Cart Items -->
           <div class="p-6">
             {% if keranjang_items %}
             <div class="space-y-4 max-h-96 overflow-y-auto">
               {% for item in keranjang_items %}
-              <div
-                class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200">
+              <div class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200">
                 <div class="flex items-center space-x-3">
-                  <div
-                    class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <span class="text-gray-700 font-semibold text-sm"
-                      >{{ item.produk.name|first|upper }}</span
-                    >
+                  <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span class="text-gray-700 font-semibold text-sm">{{ item.produk.name|first|upper }}</span>
                   </div>
                   <div>
                     <h4 class="font-semibold text-gray-900 text-sm">
@@ -239,18 +169,9 @@
             </div>
             {% else %}
             <div class="text-center py-12">
-              <div
-                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  class="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2-2v6" />
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2-2v6" />
                 </svg>
               </div>
               <h4 class="text-lg font-semibold text-gray-900 mb-2">
@@ -263,24 +184,16 @@
             {% endif %}
           </div>
 
-          <!-- Cart Total -->
           {% if keranjang_items %}
           <div class="border-t border-gray-200 p-6">
             <div class="flex items-center justify-between mb-6">
-              <span class="text-lg font-semibold text-gray-900"
-                >Total Pembayaran</span
-              >
-              <span class="text-3xl font-bold text-gray-800"
-                >Rp{{ total|idr }}</span
-              >
+              <span class="text-lg font-semibold text-gray-900">Total Pembayaran</span>
+              <span class="text-3xl font-bold text-gray-800">Rp{{ total|idr }}</span>
             </div>
 
-            <!-- Checkout Button -->
             <form method="post" action="{% url 'kasir_checkout' %}">
               {% csrf_token %}
-              <button
-                type="submit"
-                class="w-full inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200">
+              <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200">
                 Checkout Sekarang
               </button>
             </form>
@@ -292,8 +205,91 @@
   </div>
 </div>
 
-<!-- JavaScript for Interactive Features -->
+<script src="https://unpkg.com/html5-qrcode@2.3.7/html5-qrcode.min.js"></script>
 <script>
+  let html5QrCode;
+  let isScanning = false;
+  const qrCodeRegionId = "qr-reader"; // ID tunggal untuk elemen scanner
+  const qrCodeResultElement = document.getElementById("qr-reader-result"); // Untuk menampilkan hasil scan
+
+  function startScan() {
+    if (isScanning) {
+      console.log("Scanner already running.");
+      return;
+    }
+
+    html5QrCode = new Html5Qrcode(qrCodeRegionId);
+    isScanning = true;
+    qrCodeResultElement.textContent = "Mulai memindai...";
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        // Gunakan kamera pertama atau pilih yang sesuai
+        const cameraId = devices[0].id; 
+        html5QrCode.start(
+          cameraId,
+          {
+            fps: 10, // Frames per second
+            qrbox: { width: 250, height: 250 } // Ukuran area scan
+          },
+          (decodedText, decodedResult) => {
+            // Callback sukses
+            console.log(`Scan berhasil: ${decodedText}`);
+            qrCodeResultElement.textContent = `Barcode terdeteksi: ${decodedText}`;
+            html5QrCode.stop().then(() => {
+              isScanning = false;
+              handleScannedBarcode(decodedText);
+            }).catch(err => {
+              console.error("Gagal menghentikan scanner:", err);
+              isScanning = false;
+            });
+          },
+          (errorMessage) => {
+            // Callback error (tidak terlalu penting untuk ditampilkan ke user jika hanya noise)
+          }
+        ).catch(err => {
+          console.error("Gagal memulai scanner:", err);
+          qrCodeResultElement.textContent = "Gagal memulai kamera. Pastikan izin kamera diberikan.";
+          isScanning = false;
+        });
+      } else {
+        qrCodeResultElement.textContent = "Tidak ada kamera terdeteksi.";
+        isScanning = false;
+      }
+    }).catch(err => {
+      console.error("Gagal mendapatkan daftar kamera:", err);
+      qrCodeResultElement.textContent = "Error akses kamera.";
+      isScanning = false;
+    });
+  }
+
+  function handleScannedBarcode(barcode) {
+    fetch("{% url 'add-by-barcode' %}?barcode=" + barcode)
+      .then(response => {
+        if (response.ok) {
+          return response.json(); // Harapkan JSON response dari backend
+        } else {
+          throw new Error('Produk tidak ditemukan atau error server.');
+        }
+      })
+      .then(data => {
+        if (data.status === 'success') {
+          alert("✅ Produk berhasil ditambahkan ke keranjang!");
+          // Perbarui tampilan keranjang secara dinamis jika memungkinkan, 
+          // atau setidaknya perbarui jumlah produk yang relevan.
+          // Untuk kemudahan, saat ini kita akan reload halaman.
+          window.location.reload(); 
+        } else {
+          alert("❌ " + data.message);
+        }
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        alert("⚠️ Gagal menambahkan produk: " + err.message);
+      });
+  }
+
+  // JavaScript for Interactive Features (bagian ini sudah baik)
   const productPrices = {
     {% for produk in produk_list %}
     {{ produk.pk }}: {{ produk.price }},
@@ -315,6 +311,8 @@
     if (currentValue < maxStock) {
       input.value = currentValue + 1;
       updateSubtotal(inputId);
+    } else {
+        alert("Stok tidak mencukupi!");
     }
   }
 

@@ -12,6 +12,8 @@ from django.template.loader import get_template
 from django.http import HttpResponse, HttpResponseForbidden
 from xhtml2pdf import pisa
 from django.db.models import F
+from django.http import JsonResponse
+
 
 # Custom decorator: hanya kasir yang bisa akses, admin tidak bisa
 
@@ -338,3 +340,32 @@ def create_return(request, product_id):
 def order_detail(request, pk):
     order = get_object_or_404(Order, pk=pk)  # Ambil pesanan berdasarkan ID
     return render(request, 'order_detail.html', {'order': order})
+
+@login_required
+@kasir_only
+def add_by_barcode(request):
+    barcode = request.GET.get('barcode')
+    if not barcode:
+        return JsonResponse({'status': 'error', 'message': 'Barcode tidak ditemukan.'}, status=400)
+
+    try:
+        product = Product.objects.get(barcode=barcode)
+    except Product.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
+    
+    keranjang = request.session.get('keranjang', {})
+    product_pk_str = str(product.pk)
+
+    # Periksa stok sebelum menambahkan
+    current_qty_in_cart = keranjang.get(product_pk_str, 0)
+    if product.stock <= current_qty_in_cart:
+        return JsonResponse({'status': 'error', 'message': f'Stok {product.name} habis atau tidak cukup.'}, status=400)
+
+    keranjang[product_pk_str] = keranjang.get(product_pk_str, 0) + 1
+    request.session['keranjang'] = keranjang
+    
+    # Perbarui session agar perubahan segera disimpan
+    request.session.modified = True 
+
+    return JsonResponse({'status': 'success', 'message': 'Produk berhasil ditambahkan ke keranjang.'})
+
