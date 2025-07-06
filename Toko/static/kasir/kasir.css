@@ -1,0 +1,30 @@
+/* CSS untuk garis scanner dan area scan barcode */
+#qr-reader {
+  position: relative;
+}
+#scanner-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  z-index: 10;
+  animation: scanner-move 2s linear infinite alternate;
+  opacity: 0.85;
+  box-shadow: 0 0 8px 2px #10b98144;
+  display: none;
+}
+@keyframes scanner-move {
+  0% {
+    top: 10%;
+  }
+  100% {
+    top: 80%;
+  }
+}
+#qr-reader video {
+  transform: scaleX(1);
+}

@@ -1,0 +1,118 @@
+{# Daftar Produk di Keranjang (panel kiri) #}
+{% load dict_extras idr static %}
+<div id="daftar-produk-list" class="p-6 space-y-4">
+  {% for item in keranjang_items %}
+  <div
+    id="product-row-{{ item.produk.pk }}"
+    class="group bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-all duration-200">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div
+          class="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+          <span class="text-gray-700 font-semibold text-lg">
+            {{ item.produk.name|first|upper }}
+          </span>
+        </div>
+        <div>
+          <h3
+            class="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-200">
+            {{ item.produk.name }}
+          </h3>
+          <div class="mt-2">
+            <div class="flex items-center space-x-4">
+              <span class="text-lg font-semibold text-gray-900"
+                >Rp{{ item.produk.price|idr }}</span
+              >
+              <span
+                id="stock-status-{{ item.produk.pk }}"
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if item.produk.stock > 10 %}bg-green-100 text-green-800 {% elif item.produk.stock > 5 %}bg-yellow-100 text-yellow-800 {% elif item.produk.stock > 0 %}bg-red-100 text-red-800 {% else %}bg-gray-200 text-gray-500{% endif %}">
+                {% if item.produk.stock > 0 %}{{ item.produk.stock }} tersedia
+                {% else %}Stok habis{% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <div
+          class="flex items-center space-x-3 bg-white rounded-xl p-3 border border-gray-200">
+          <button
+            type="button"
+            onclick="updateQuantityAjax('{{ item.produk.pk }}', -1)"
+            class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 12H4" />
+            </svg>
+          </button>
+
+          <input
+            type="number"
+            id="qty_{{ item.produk.pk }}"
+            min="0"
+            max="{{ item.produk.stock }}"
+            value="{{ item.qty }}"
+            onchange="updateQuantityAjax('{{ item.produk.pk }}', 'manual', this.value)"
+            class="w-16 h-10 text-center text-lg font-semibold border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200" />
+
+          <button
+            type="button"
+            onclick="updateQuantityAjax('{{ item.produk.pk }}', 1)"
+            class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="text-right">
+          <p class="text-sm text-gray-500">Subtotal</p>
+          <p
+            class="text-lg font-semibold text-gray-900"
+            id="subtotal_{{ item.produk.pk }}">
+            Rp{{ item.subtotal|idr }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  <div
+    id="empty-product-list-message"
+    class="{% if keranjang_items %}hidden{% else %}{% endif %} text-center py-16">
+    <div
+      class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg
+        class="w-10 h-10 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">
+      Belum ada produk di keranjang
+    </h3>
+    <p class="text-gray-500">Scan produk untuk memulai transaksi</p>
+  </div>
+</div>

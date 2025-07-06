@@ -25,4 +25,6 @@ urlpatterns = [
     path('pesanan/<int:pk>/', views.order_detail, name='order_detail'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('get-product-by-barcode/', views.get_product_by_barcode, name='get_product_by_barcode'),
+    path('api/update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
+    path('api/remove-item-from-cart/', views.remove_item_from_cart, name='remove_item_from_cart'),
 ]

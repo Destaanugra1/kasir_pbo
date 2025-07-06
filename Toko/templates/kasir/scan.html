@@ -1,0 +1,228 @@
+{# Area Scan QR Code dengan UI kotak #}
+{% load dict_extras idr static %}
+
+<style>
+  .qr-scanner-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .qr-scanner-frame {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qr-scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .qr-scanner-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 3px solid #10b981;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .qr-scanner-corners {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    z-index: 30;
+    pointer-events: none;
+  }
+
+  .qr-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #10b981;
+  }
+
+  .qr-corner.top-left {
+    top: -3px;
+    left: -3px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .qr-corner.top-right {
+    top: -3px;
+    right: -3px;
+    border-left: none;
+    border-bottom: none;
+  }
+
+  .qr-corner.bottom-left {
+    bottom: -3px;
+    left: -3px;
+    border-right: none;
+    border-top: none;
+  }
+
+  .qr-corner.bottom-right {
+    bottom: -3px;
+    right: -3px;
+    border-left: none;
+    border-top: none;
+  }
+
+  .qr-scanner-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #10b981, transparent);
+    z-index: 25;
+    animation: scan-line 2s linear infinite;
+    pointer-events: none;
+    display: none;
+  }
+
+  @keyframes scan-line {
+    0% {
+      top: calc(50% - 90px);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      top: calc(50% + 90px);
+      opacity: 0;
+    }
+  }
+
+  .qr-scanner-active .qr-scanner-line {
+    display: block;
+  }
+
+  .qr-scanner-active .qr-scanner-box {
+    animation: pulse-border 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% {
+      border-color: #10b981;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+    50% {
+      border-color: #34d399;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 30px rgba(16, 185, 129, 0.5);
+    }
+  }
+
+  #qr-reader {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 12px;
+  }
+
+  #qr-reader > div {
+    border-radius: 12px !important;
+  }
+
+  #qr-reader video {
+    border-radius: 12px !important;
+    object-fit: cover !important;
+  }
+</style>
+
+<div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+        <svg class="w-6 h-6 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+        </svg>
+        Scan QR Code Produk
+      </h2>
+      <p class="text-sm text-gray-500 mt-1">Arahkan kamera ke QR code untuk menambah produk</p>
+    </div>
+    <div class="flex space-x-2">
+      <button
+        id="startButton"
+        onclick="startScan()"
+        class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors duration-200 flex items-center space-x-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span>Mulai Scan</span>
+      </button>
+      <button
+        id="stopButton"
+        onclick="stopScan()"
+        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors duration-200 flex items-center space-x-2 hidden">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"/>
+        </svg>
+        <span>Stop Scan</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="qr-scanner-container">
+    <div class="qr-scanner-frame" id="qr-scanner-frame">
+      <div
+        id="qr-reader"
+        class="w-full h-full rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+        <div class="text-center" id="initialMessage">
+          <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+            </svg>
+          </div>
+          <p class="text-gray-500 text-lg font-medium">Siap untuk Scan QR Code</p>
+          <p class="text-gray-400 text-sm mt-1">Tekan "Mulai Scan" untuk mengaktifkan kamera</p>
+        </div>
+      </div>
+      
+      <div class="qr-scanner-overlay" id="qr-scanner-overlay" style="display: none;"></div>
+      
+      <div class="qr-scanner-box" id="qr-scanner-box" style="display: none;"></div>
+      
+      <div class="qr-scanner-corners" id="qr-scanner-corners" style="display: none;">
+        <div class="qr-corner top-left"></div>
+        <div class="qr-corner top-right"></div>
+        <div class="qr-corner bottom-left"></div>
+        <div class="qr-corner bottom-right"></div>
+      </div>
+      
+      <div class="qr-scanner-line" id="qr-scanner-line"></div>
+    </div>
+  </div>
+
+  <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+    <p id="qr-reader-result" class="text-sm text-gray-600 text-center font-medium">
+      Pastikan QR code terlihat jelas dalam kotak scan
+    </p>
+  </div>
+</div>

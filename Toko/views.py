@@ -9,14 +9,14 @@ from django.utils import timezone
 from django.db.models import Sum
 from django import forms
 from django.template.loader import get_template
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from xhtml2pdf import pisa
 from django.db.models import F
-from django.http import JsonResponse
+from django.views.decorators.http import require_POST, require_GET
+from django.db import transaction
 
 
 # Custom decorator: hanya kasir yang bisa akses, admin tidak bisa
-
 def home(request):
     return render(request, 'home.html')
 
@@ -52,7 +52,7 @@ class CustomLoginView(LoginView):
             if user.userprofile.role == 'admin':
                 return reverse_lazy('product_list')
             elif user.userprofile.role == 'kasir':
-                return reverse_lazy('kasir')
+                return reverse_lazy('kasir') # Menggunakan nama URL 'kasir' sesuai yang Anda berikan
         return reverse_lazy('beranda')
 
 # Form produk
@@ -67,7 +67,6 @@ def dashboard(request):
     today = timezone.now().date()
     start_date = today - timedelta(days=29)
     orders = Order.objects.filter(order_date__date__range=[start_date, today])
-    print(list(orders))
 
     sales_data = (
         orders
@@ -75,7 +74,6 @@ def dashboard(request):
         .annotate(total=Sum('total'))
         .order_by('order_date__date')
     )
-    print(list(sales_data))
 
     labels = []
     data = []
@@ -85,7 +83,7 @@ def dashboard(request):
         found = next((item for item in sales_data if item['order_date__date'] == day), None)
         data.append(float(found['total']) if found else 0)
 
-        category_sales = (
+    category_sales = (
         OrderItem.objects
         .filter(order__order_date__date__range=[start_date, today])
         .values(category_name=F('product__category__name'))
@@ -96,10 +94,10 @@ def dashboard(request):
     bar_data = [item['jumlah'] for item in category_sales]
 
     context = {
-    'labels': labels,
-    'data': data,
-    'bar_labels': bar_labels,
-    'bar_data': bar_data,
+        'labels': labels,
+        'data': data,
+        'bar_labels': bar_labels,
+        'bar_data': bar_data,
     }
     return render(request, 'dashboard.html', context)
 
@@ -159,86 +157,360 @@ def product_delete(request, pk):
 @login_required
 @kasir_only
 def kasir(request):
-    produk_list = Product.objects.all()
+    # View kasir ini hanya bertugas untuk menampilkan halaman awal
+    # dengan data keranjang yang ada di sesi. Semua interaksi
+    # penambahan/pengurangan/penghapusan produk akan via AJAX.
+
     keranjang = request.session.get('keranjang', {})
     keranjang_items = []
     total = 0
-    if request.method == 'POST':
-        for produk in produk_list:
-            qty = int(request.POST.get(f'qty_{produk.pk}', 0))
-            if qty > 0:
-                keranjang[str(produk.pk)] = qty
-            elif str(produk.pk) in keranjang:
-                del keranjang[str(produk.pk)]
-        request.session['keranjang'] = keranjang
 
     for pk, qty in keranjang.items():
-        produk = get_object_or_404(Product, pk=pk)
-        subtotal = produk.price * qty
-        keranjang_items.append({'produk': produk, 'qty': qty, 'subtotal': subtotal})
-        total += subtotal
+        try:
+            produk = get_object_or_404(Product, pk=pk)
+            # Pastikan kuantitas di keranjang tidak melebihi stok yang ada
+            if qty > produk.stock:
+                qty = produk.stock # Sesuaikan kuantitas di sesi jika lebih dari stok
+                keranjang[pk] = qty
+                request.session.modified = True # Penting untuk menyimpan perubahan sesi
+            if qty <= 0: # Hapus jika kuantitas jadi 0
+                del keranjang[pk]
+                request.session.modified = True
+                continue
+
+            subtotal = produk.price * qty
+            keranjang_items.append({'produk': produk, 'qty': qty, 'subtotal': subtotal})
+            total += subtotal
+        except Product.DoesNotExist:
+            # Jika produk tidak ditemukan (mungkin sudah dihapus dari DB), hapus dari keranjang sesi
+            if pk in keranjang:
+                del keranjang[pk]
+                request.session.modified = True
+            continue # Lanjutkan ke item berikutnya
 
     return render(request, 'kasir.html', {
-        'produk_list': produk_list,
         'keranjang_items': keranjang_items,
         'total': total
     })
+
+# Ini adalah endpoint yang akan dipanggil oleh scanner barcode.
+# Fungsi ini akan menambah/mengupdate produk di sesi keranjang
+# dan mengembalikan data produk yang diperlukan untuk update UI dinamis.
+@require_GET
+@login_required
+@kasir_only
+def get_product_by_barcode(request): # Nama fungsi sesuai dengan yang ada di urls.py Anda
+    barcode = request.GET.get('barcode')
+    if not barcode:
+        return JsonResponse({'status': 'error', 'message': 'Barcode tidak disediakan.'}, status=400)
+
+    try:
+        product = Product.objects.get(barcode=barcode)
+        keranjang = request.session.get('keranjang', {})
+        product_pk_str = str(product.pk)
+        
+        current_qty_in_cart = keranjang.get(product_pk_str, 0)
+        
+        # Cek stok
+        if product.stock <= 0:
+            return JsonResponse({'status': 'error', 'message': f'Stok {product.name} habis.'}, status=400)
+        
+        # Jika kuantitas saat ini di keranjang sudah mencapai stok maksimal, tolak penambahan
+        if current_qty_in_cart >= product.stock:
+             return JsonResponse({
+                'status': 'error',
+                'message': f'Stok {product.name} di keranjang sudah maksimal ({product.stock}).',
+                'product_id': product.pk, # Tetap kembalikan ID untuk identifikasi di frontend
+                'product_name': product.name
+            })
+
+        # Tambahkan 1 ke kuantitas di keranjang
+        new_qty = current_qty_in_cart + 1
+        keranjang[product_pk_str] = new_qty
+        request.session['keranjang'] = keranjang
+        request.session.modified = True # Penting untuk menyimpan perubahan sesi
+
+        # Hitung ulang total dan jumlah item setelah penambahan
+        total_amount = 0
+        current_cart_item_count = 0
+        for pk, qty in keranjang.items():
+            try:
+                p = Product.objects.get(pk=pk)
+                total_amount += p.price * qty
+                current_cart_item_count += 1 # Hitung item yang valid
+            except Product.DoesNotExist:
+                pass # Abaikan item yang tidak valid di keranjang sesi
+
+        return JsonResponse({
+            'status': 'success',
+            'product_id': product.pk,
+            'product_name': product.name,
+            'product_price': float(product.price), # Menggunakan float() untuk DecimalField
+            'product_stock': product.stock,
+            'new_qty_in_cart': new_qty,
+            'total_amount': float(total_amount),
+            'total_items': current_cart_item_count
+        })
+
+    except Product.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': f'Produk dengan barcode "{barcode}" tidak ditemukan.'}, status=404)
+    except Exception as e:
+        print(f"Error in get_product_by_barcode: {e}")
+        return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan server: {str(e)}'}, status=500)
+
+# Karena di urls.py Anda ada `kasir/add-barcode/`, saya akan definisikan ini
+# agar tidak ada AttributeError. Namun, fungsi ini mungkin tidak terpakai
+# jika semua penambahan ditangani oleh `get_product_by_barcode`.
+# Jika Anda berencana menggunakan ini untuk menambah 1 per klik,
+# maka logika di dalamnya perlu ditambahkan. Saat ini, saya akan membuatnya
+# mengembalikan pesan sederhana atau redirect ke kasir.
+@login_required
+@kasir_only
+def add_by_barcode(request): # Nama fungsi sesuai dengan yang ada di urls.py Anda
+    # Ini mungkin tidak akan terpanggil jika scanner langsung memanggil get_product_by_barcode
+    # dan Anda tidak memiliki tombol lain yang mengarah ke sini.
+    # Namun, saya tetap definisikan untuk menghindari AttributeError.
+    
+    # Anda bisa tambahkan logika di sini jika fungsi ini memang ingin digunakan
+    # Misalnya, jika ada input manual barcode dan tombol "Tambah"
+    if request.method == 'POST':
+        barcode = request.POST.get('barcode')
+        if barcode:
+            try:
+                product = Product.objects.get(barcode=barcode)
+                keranjang = request.session.get('keranjang', {})
+                product_pk_str = str(product.pk)
+                
+                # Tambah 1 ke keranjang, mirip dengan logika di get_product_by_barcode
+                current_qty_in_cart = keranjang.get(product_pk_str, 0)
+                if current_qty_in_cart < product.stock:
+                    keranjang[product_pk_str] = current_qty_in_cart + 1
+                    request.session['keranjang'] = keranjang
+                    request.session.modified = True
+                    return JsonResponse({'status': 'success', 'message': f'Produk "{product.name}" ditambahkan.'})
+                else:
+                    return JsonResponse({'status': 'error', 'message': f'Stok {product.name} habis atau tidak cukup.'})
+            except Product.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': f'Produk dengan barcode "{barcode}" tidak ditemukan.'})
+        return JsonResponse({'status': 'error', 'message': 'Barcode tidak disediakan.'})
+    return JsonResponse({'status': 'error', 'message': 'Metode tidak diizinkan.'}, status=405)
+
+
+# >>> View untuk update kuantitas via AJAX (increase/decrease) <<<
+# URL untuk ini adalah 'api/update-cart-quantity/' yang mungkin perlu di-include secara terpisah.
+@require_POST
+@login_required
+@kasir_only
+def update_cart_quantity(request):
+    product_id = request.POST.get('product_id')
+    new_qty = int(request.POST.get('new_qty', 0))
+
+    if not product_id:
+        return JsonResponse({'status': 'error', 'message': 'ID Produk tidak disediakan.'}, status=400)
+
+    try:
+        product = get_object_or_404(Product, pk=product_id)
+        keranjang = request.session.get('keranjang', {})
+        product_pk_str = str(product.pk)
+
+        if new_qty < 0:
+            new_qty = 0 # Kuantitas tidak boleh negatif
+        if new_qty > product.stock:
+            new_qty = product.stock # Kuantitas tidak boleh melebihi stok
+
+        if new_qty == 0:
+            if product_pk_str in keranjang:
+                del keranjang[product_pk_str]
+        else:
+            keranjang[product_pk_str] = new_qty
+
+        request.session['keranjang'] = keranjang
+        request.session.modified = True
+
+        # Hitung ulang total dan jumlah item
+        total_amount = 0
+        current_cart_item_count = 0
+        for pk, qty in keranjang.items():
+            try:
+                p = Product.objects.get(pk=pk)
+                total_amount += p.price * qty
+                current_cart_item_count += 1
+            except Product.DoesNotExist:
+                pass
+
+        return JsonResponse({
+            'status': 'success',
+            'product_id': product.pk,
+            'product_name': product.name,
+            'new_qty_in_cart': new_qty,
+            'subtotal': float(product.price * new_qty),
+            'total_amount': float(total_amount),
+            'total_items': current_cart_item_count,
+            'message': f'Kuantitas {product.name} diperbarui menjadi {new_qty}.'
+        })
+
+    except Product.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Produk tidak ditemukan.'}, status=404)
+    except Exception as e:
+        print(f"Error in update_cart_quantity: {e}")
+        return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan server: {str(e)}'}, status=500)
+
+
+# >>> View untuk menghapus item dari keranjang via AJAX <<<
+# URL untuk ini adalah 'api/remove-item-from-cart/' yang mungkin perlu di-include secara terpisah.
+@require_POST
+@login_required
+@kasir_only
+def remove_item_from_cart(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest': # Pastikan ini AJAX request
+        product_id = request.POST.get('product_id')
+        if product_id:
+            keranjang = request.session.get('keranjang', {})
+            if product_id in keranjang:
+                del keranjang[product_id]
+                request.session['keranjang'] = keranjang
+                request.session.modified = True
+                
+                # Hitung ulang total dan jumlah item setelah penghapusan
+                total_amount = 0
+                current_cart_item_count = 0
+                for pk, qty in keranjang.items():
+                    try:
+                        produk = Product.objects.get(pk=pk) 
+                        total_amount += produk.price * qty
+                        current_cart_item_count += 1
+                    except Product.DoesNotExist:
+                        pass 
+
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Produk berhasil dihapus dari keranjang.',
+                    'total_items': current_cart_item_count, 
+                    'total_amount': float(total_amount) 
+                })
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Produk tidak ada di keranjang.'}, status=404)
+        return JsonResponse({'status': 'error', 'message': 'ID produk tidak disediakan.'}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
 
 @login_required
 @kasir_only
 def kasir_checkout(request):
     keranjang = request.session.get('keranjang', {})
     if not keranjang:
-        return redirect('kasir')
+        return redirect('kasir') # Menggunakan nama URL 'kasir' sesuai yang Anda berikan
 
-    # Ambil customer, jika belum ada buat default
-    customer = Customer.objects.first()
-    if not customer:
-        # Buat user default untuk customer umum
-        user_customer, created = User.objects.get_or_create(
-            username='customer_umum',
-            defaults={'first_name': 'Umum', 'last_name': '', 'email': ''} 
+    with transaction.atomic(): # Pastikan operasi ini bersifat atomik
+        customer = Customer.objects.first()
+        if not customer:
+            user_customer, created = User.objects.get_or_create(
+                username='customer_umum',
+                defaults={'first_name': 'Umum', 'last_name': '', 'email': ''} 
+            )
+            customer = Customer.objects.create(
+                user=user_customer,
+                phone='-',
+                address='-'
+            )
+
+        cashier = Cashier.objects.filter(user=request.user).first()
+        if not cashier:
+             # Ciptakan Cashier jika tidak ada
+            cashier = Cashier.objects.create(user=request.user) 
+
+        order = Order.objects.create(
+            customer=customer,
+            cashier=cashier,
+            subtotal=0,
+            tax=0,
+            discount=0,
+            total=0,
+            is_paid=True
         )
-        customer = Customer.objects.create(
-            user=user_customer,
-            phone='-',
-            address='-'
-        )
 
-    cashier = Cashier.objects.filter(user=request.user).first()
-    order = Order.objects.create(
-        customer=customer,
-        cashier=cashier,
-        subtotal=0,
-        tax=0,
-        discount=0,
-        total=0,
-        is_paid=True
-    )
+        total_checkout = 0
+        order_items_for_template = []
+        products_to_update_stock = []
 
-    total = 0
-    order_items = []
-    for pk, qty in keranjang.items():
-        produk = get_object_or_404(Product, pk=pk)
-        subtotal = produk.price * qty
-        OrderItem.objects.create(order=order, product=produk, quantity=qty, price=produk.price)
-        produk.stock -= qty
-        produk.save()
-        order_items.append({'produk': produk, 'qty': qty, 'subtotal': subtotal})
-        total += subtotal
+        for pk_str, qty in keranjang.items():
+            try:
+                produk = get_object_or_404(Product, pk=pk_str)
+                if produk.stock < qty:
+                    transaction.set_rollback(True)
+                    # Kembali ke halaman kasir dengan pesan error
+                    # Untuk render ulang halaman kasir dengan data terkini
+                    keranjang_items_error, total_error = [], 0
+                    for p, q in keranjang.items():
+                        try:
+                            prod_obj = Product.objects.get(pk=p)
+                            keranjang_items_error.append({'produk': prod_obj, 'qty': q, 'subtotal': prod_obj.price * q})
+                            total_error += prod_obj.price * q
+                        except Product.DoesNotExist:
+                            pass
+                    return render(request, 'kasir.html', {
+                        'keranjang_items': keranjang_items_error,
+                        'total': total_error,
+                        'error_message': f"Stok {produk.name} tidak cukup! Sisa stok: {produk.stock}"
+                    })
+                
+                subtotal_item = produk.price * qty
+                OrderItem.objects.create(order=order, product=produk, quantity=qty, price=produk.price)
+                
+                produk.stock -= qty
+                products_to_update_stock.append(produk)
 
-    order.subtotal = total
-    order.total = total
-    order.save()
+                order_items_for_template.append({'produk': produk, 'qty': qty, 'subtotal': subtotal_item})
+                total_checkout += subtotal_item
 
-    request.session['keranjang'] = {}
+            except Product.DoesNotExist:
+                transaction.set_rollback(True)
+                # handle jika produk dihapus dari DB setelah ditambahkan ke keranjang
+                keranjang_items_error, total_error = [], 0
+                for p, q in keranjang.items():
+                    try:
+                        prod_obj = Product.objects.get(pk=p)
+                        keranjang_items_error.append({'produk': prod_obj, 'qty': q, 'subtotal': prod_obj.price * q})
+                        total_error += prod_obj.price * q
+                    except Product.DoesNotExist:
+                        pass
+                return render(request, 'kasir.html', {
+                    'keranjang_items': keranjang_items_error,
+                    'total': total_error,
+                    'error_message': f"Produk dengan ID {pk_str} tidak ditemukan."
+                })
+            except Exception as e:
+                transaction.set_rollback(True)
+                keranjang_items_error, total_error = [], 0
+                for p, q in keranjang.items():
+                    try:
+                        prod_obj = Product.objects.get(pk=p)
+                        keranjang_items_error.append({'produk': prod_obj, 'qty': q, 'subtotal': prod_obj.price * q})
+                        total_error += prod_obj.price * q
+                    except Product.DoesNotExist:
+                        pass
+                return render(request, 'kasir.html', {
+                    'keranjang_items': keranjang_items_error,
+                    'total': total_error,
+                    'error_message': f"Terjadi kesalahan saat memproses produk {pk_str}: {e}"
+                })
+        
+        for p_to_update in products_to_update_stock:
+            p_to_update.save()
+
+        order.subtotal = total_checkout
+        order.total = total_checkout
+        order.save()
+
+        request.session['keranjang'] = {}
+        request.session.modified = True
 
     return render(request, 'kasir_sukses.html', {
         'order': order,
-        'order_items': order_items,
+        'order_items': order_items_for_template,
         'customer': customer,
         'cashier': cashier,
-        'total': total
+        'total': total_checkout
     })
 
 @login_required
@@ -341,55 +613,17 @@ def order_detail(request, pk):
     order = get_object_or_404(Order, pk=pk)  # Ambil pesanan berdasarkan ID
     return render(request, 'order_detail.html', {'order': order})
 
+@require_POST
 @login_required
-@kasir_only
-def add_by_barcode(request):
-    barcode = request.GET.get('barcode')
-    if not barcode:
-        return JsonResponse({'status': 'error', 'message': 'Barcode tidak ditemukan.'}, status=400)
-
-    try:
-        product = Product.objects.get(barcode=barcode)
-    except Product.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
-    
+def update_cart_quantity(request):
+    product_id = request.POST.get('product_id')
+    new_qty = int(request.POST.get('new_qty', 0))
     keranjang = request.session.get('keranjang', {})
-    product_pk_str = str(product.pk)
-
-    # Periksa stok sebelum menambahkan
-    current_qty_in_cart = keranjang.get(product_pk_str, 0)
-    if product.stock <= current_qty_in_cart:
-        return JsonResponse({'status': 'error', 'message': f'Stok {product.name} habis atau tidak cukup.'}, status=400)
-
-    keranjang[product_pk_str] = keranjang.get(product_pk_str, 0) + 1
+    if new_qty > 0:
+        keranjang[product_id] = new_qty
+    elif product_id in keranjang:
+        del keranjang[product_id]
     request.session['keranjang'] = keranjang
-    
-    # Perbarui session agar perubahan segera disimpan
-    request.session.modified = True 
-
-    return JsonResponse({'status': 'success', 'message': 'Produk berhasil ditambahkan ke keranjang.'})
-
-
-# Tambahkan view get_product_by_barcode di sini
-@login_required
-@kasir_only
-def get_product_by_barcode(request):
-    barcode = request.GET.get('barcode')
-    if not barcode:
-        return JsonResponse({'status': 'error', 'message': 'Barcode tidak disediakan.'}, status=400)
-
-    try:
-        product = Product.objects.get(barcode=barcode)
-        return JsonResponse({
-            'status': 'success',
-            'product_id': product.pk,
-            'product_name': product.name,
-            'product_price': float(product.price), # Pastikan ini diubah ke float/string jika decimal
-            'product_stock': product.stock
-        })
-    except Product.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
-    except Exception as e:
-        # Untuk debugging, log error lengkap di console server
-        print(f"Error in get_product_by_barcode: {e}")
-        return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan server: {str(e)}'}, status=500)
+    request.session.modified = True
+    # Anda bisa return info produk, total, dsb sesuai kebutuhan frontend
+    return JsonResponse({'status': 'success', 'message': 'Kuantitas diperbarui', 'product_id': product_id, 'new_qty_in_cart': new_qty})
