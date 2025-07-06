@@ -349,6 +349,11 @@ def add_by_barcode(request):
         return JsonResponse({'status': 'error', 'message': 'Barcode tidak ditemukan.'}, status=400)
 
     try:
+        product = Product.objects.get(barcode=barcode)  # <--- DI SINI
+    except Product.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
+
+    try:
         product = Product.objects.get(barcode=barcode)
     except Product.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)

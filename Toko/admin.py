@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import (
     Category, Product, Customer, Order, OrderItem, Payment,
     Supplier, Purchase, PurchaseItem, Return, Cashier, UserProfile
@@ -10,14 +11,6 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description')
     search_fields = ('name',)
     list_filter = ('name',)
-
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'price', 'stock', 'category', 'supplier')
-    search_fields = ('name',)
-    list_filter = ('category', 'supplier')
-    fields = ('name', 'price', 'stock', 'category', 'supplier', 'image') 
-    list_editable = ('price', 'stock', 'name')
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
@@ -72,3 +65,18 @@ class ReturnAdmin(admin.ModelAdmin):
 class CashierAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'employee_id')
     search_fields = ('user__username', 'employee_id')
+    
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'barcode', 'show_qr_image', 'price', 'stock', 'category', 'supplier')
+    search_fields = ('name', 'barcode')
+    list_filter = ('category', 'supplier')
+    readonly_fields = ('barcode', 'qr_image', 'show_qr_image')
+    fields = ('name', 'description', 'price', 'cost', 'stock', 'category', 'supplier', 'image', 'barcode', 'qr_image', 'show_qr_image')
+    list_editable = ('price', 'stock', 'name')
+
+    def show_qr_image(self, obj):
+        if obj.qr_image:
+            return format_html('<img src="{}" width="60" height="60" />', obj.qr_image.url)
+        return "-"
+    show_qr_image.short_description = 'QR Code'

@@ -1,165 +1,233 @@
-{% extends "sidebar.html" %}
-{% block content %}
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+{% extends "sidebar.html" %} {% block content %}
+<div
+  class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
   <div class="max-w-3xl mx-auto">
     <!-- Header -->
     <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4 animate-pulse">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      <div
+        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4 animate-pulse">
+        <svg
+          class="w-8 h-8 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       </div>
-      <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+      <h1
+        class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
         {% if form.instance.pk %}Edit Produk{% else %}Tambah Produk{% endif %}
       </h1>
       <p class="text-gray-600 max-w-md mx-auto">
-        {% if form.instance.pk %}
-        Ubah informasi produk {{ form.instance.name }} dengan detail terbaru
-        {% else %}
-        Tambahkan produk baru ke inventaris toko Anda
-        {% endif %}
+        {% if form.instance.pk %} Ubah informasi produk {{ form.instance.name }}
+        dengan detail terbaru {% else %} Tambahkan produk baru ke inventaris
+        toko Anda {% endif %}
       </p>
     </div>
 
     <!-- Form Card -->
-    <div class="bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl overflow-hidden">
+    <div
+      class="bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl overflow-hidden">
       <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
         <h2 class="text-lg font-semibold text-white">Detail Produk</h2>
       </div>
-      
+
       <form method="post" enctype="multipart/form-data" class="p-6 space-y-6">
         {% csrf_token %}
-        
+
         <!-- Nama & Kategori -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
-            <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+            <label
+              for="{{ form.name.id_for_label }}"
+              class="block text-sm font-medium text-gray-700">
               Nama Produk <span class="text-red-500">*</span>
             </label>
-            {{ form.name|safe }}
-            {% if form.name.errors %}
-              <p class="text-red-500 text-xs">{{ form.name.errors|join:", " }}</p>
+            {{ form.name|safe }} {% if form.name.errors %}
+            <p class="text-red-500 text-xs">{{ form.name.errors|join:", " }}</p>
             {% endif %}
           </div>
-          
+
           <div class="space-y-2">
-            <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700">
+            <label
+              for="{{ form.category.id_for_label }}"
+              class="block text-sm font-medium text-gray-700">
               Kategori <span class="text-red-500">*</span>
             </label>
-            {{ form.category|safe }}
-            {% if form.category.errors %}
-              <p class="text-red-500 text-xs">{{ form.category.errors|join:", " }}</p>
+            {{ form.category|safe }} {% if form.category.errors %}
+            <p class="text-red-500 text-xs">
+              {{ form.category.errors|join:", " }}
+            </p>
             {% endif %}
           </div>
         </div>
-        
+
         <!-- Deskripsi -->
         <div class="space-y-2">
-          <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+          <label
+            for="{{ form.description.id_for_label }}"
+            class="block text-sm font-medium text-gray-700">
             Deskripsi
           </label>
-          {{ form.description|safe }}
-          {% if form.description.errors %}
-            <p class="text-red-500 text-xs">{{ form.description.errors|join:", " }}</p>
+          {{ form.description|safe }} {% if form.description.errors %}
+          <p class="text-red-500 text-xs">
+            {{ form.description.errors|join:", " }}
+          </p>
           {% endif %}
         </div>
-        
+
         <!-- Harga & Modal -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
-            <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700">
+            <label
+              for="{{ form.price.id_for_label }}"
+              class="block text-sm font-medium text-gray-700">
               Harga Jual <span class="text-red-500">*</span>
             </label>
             <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span class="text-gray-500">Rp</span>
               </div>
               {{ form.price|safe }}
             </div>
             {% if form.price.errors %}
-              <p class="text-red-500 text-xs">{{ form.price.errors|join:", " }}</p>
+            <p class="text-red-500 text-xs">
+              {{ form.price.errors|join:", " }}
+            </p>
             {% endif %}
           </div>
-          
+
           <div class="space-y-2">
-            <label for="{{ form.cost.id_for_label }}" class="block text-sm font-medium text-gray-700">
+            <label
+              for="{{ form.cost.id_for_label }}"
+              class="block text-sm font-medium text-gray-700">
               Modal <span class="text-red-500">*</span>
             </label>
             <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span class="text-gray-500">Rp</span>
               </div>
               {{ form.cost|safe }}
             </div>
             {% if form.cost.errors %}
-              <p class="text-red-500 text-xs">{{ form.cost.errors|join:", " }}</p>
+            <p class="text-red-500 text-xs">{{ form.cost.errors|join:", " }}</p>
             {% endif %}
           </div>
         </div>
-        
+
         <!-- Stok & Supplier -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-2">
-            <label for="{{ form.stock.id_for_label }}" class="block text-sm font-medium text-gray-700">
+            <label
+              for="{{ form.stock.id_for_label }}"
+              class="block text-sm font-medium text-gray-700">
               Stok <span class="text-red-500">*</span>
             </label>
-            {{ form.stock|safe }}
-            {% if form.stock.errors %}
-              <p class="text-red-500 text-xs">{{ form.stock.errors|join:", " }}</p>
+            {{ form.stock|safe }} {% if form.stock.errors %}
+            <p class="text-red-500 text-xs">
+              {{ form.stock.errors|join:", " }}
+            </p>
             {% endif %}
           </div>
-          
+
           <div class="space-y-2">
-            <label for="{{ form.supplier.id_for_label }}" class="block text-sm font-medium text-gray-700">
+            <label
+              for="{{ form.supplier.id_for_label }}"
+              class="block text-sm font-medium text-gray-700">
               Supplier <span class="text-red-500">*</span>
             </label>
-            {{ form.supplier|safe }}
-            {% if form.supplier.errors %}
-              <p class="text-red-500 text-xs">{{ form.supplier.errors|join:", " }}</p>
+            {{ form.supplier|safe }} {% if form.supplier.errors %}
+            <p class="text-red-500 text-xs">
+              {{ form.supplier.errors|join:", " }}
+            </p>
             {% endif %}
           </div>
         </div>
-        
+
         <!-- Gambar -->
         <div class="space-y-2">
-          <label for="{{ form.image.id_for_label }}" class="block text-sm font-medium text-gray-700">
+          <label
+            for="{{ form.image.id_for_label }}"
+            class="block text-sm font-medium text-gray-700">
             Gambar Produk
           </label>
           <div class="flex items-center space-x-6">
             {% if form.instance.image %}
             <div class="flex-shrink-0">
-              <img class="h-16 w-16 object-cover rounded-lg" src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}">
+              <img
+                class="h-16 w-16 object-cover rounded-lg"
+                src="{{ form.instance.image.url }}"
+                alt="{{ form.instance.name }}" />
             </div>
             {% endif %}
-            <div class="flex-1">
-              {{ form.image|safe }}
-            </div>
+            <div class="flex-1">{{ form.image|safe }}</div>
           </div>
           {% if form.image.errors %}
-            <p class="text-red-500 text-xs">{{ form.image.errors|join:", " }}</p>
+          <p class="text-red-500 text-xs">{{ form.image.errors|join:", " }}</p>
           {% endif %}
-          <p class="text-xs text-gray-500 mt-1">Format yang direkomendasikan: JPG, PNG (Max 2MB)</p>
+          <p class="text-xs text-gray-500 mt-1">
+            Format yang direkomendasikan: JPG, PNG (Max 2MB)
+          </p>
         </div>
-        
+
+        <!-- QR Code Otomatis -->
+        {% if form.instance.qr_image %}
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            QR Code Produk
+          </label>
+          <img
+            src="{{ form.instance.qr_image.url }}"
+            alt="QR Produk"
+            class="h-24 w-24 object-contain border rounded-lg" />
+        </div>
+        {% endif %}
+
         <!-- Action Buttons -->
         <div class="flex justify-between pt-4 border-t border-gray-200">
-          <a href="{% url 'product_list' %}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          <a
+            href="{% url 'product_list' %}"
+            class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Kembali
           </a>
-          
-          <button type="submit" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+
+          <button
+            type="submit"
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7" />
             </svg>
             Simpan Produk
           </button>
         </div>
       </form>
     </div>
-    
+
     <div class="mt-6 text-center text-sm text-gray-500">
       <p>Pastikan mengisi informasi yang benar dan lengkap</p>
     </div>
@@ -168,22 +236,52 @@
 
 <script>
   // Tambahkan class ke semua input
-  document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input:not([type="file"]), textarea, select');
-    inputs.forEach(input => {
-      input.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-blue-500', 'focus:border-transparent', 'transition-all', 'duration-200');
-      
-      if (input.id === '{{ form.price.id_for_label }}' || input.id === '{{ form.cost.id_for_label }}') {
+  document.addEventListener('DOMContentLoaded', function () {
+    const inputs = document.querySelectorAll(
+      'input:not([type="file"]), textarea, select'
+    );
+    inputs.forEach((input) => {
+      input.classList.add(
+        'w-full',
+        'px-4',
+        'py-2',
+        'border',
+        'border-gray-300',
+        'rounded-lg',
+        'focus:ring-2',
+        'focus:ring-blue-500',
+        'focus:border-transparent',
+        'transition-all',
+        'duration-200'
+      );
+
+      if (
+        input.id === '{{ form.price.id_for_label }}' ||
+        input.id === '{{ form.cost.id_for_label }}'
+      ) {
         input.classList.add('pl-10');
       }
     });
-    
+
     // Style untuk file input
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
-      fileInput.classList.add('block', 'w-full', 'text-sm', 'text-gray-500', 'file:mr-4', 'file:py-2', 'file:px-4', 
-      'file:rounded-md', 'file:border-0', 'file:text-sm', 'file:font-semibold', 
-      'file:bg-blue-50', 'file:text-blue-700', 'hover:file:bg-blue-100');
+      fileInput.classList.add(
+        'block',
+        'w-full',
+        'text-sm',
+        'text-gray-500',
+        'file:mr-4',
+        'file:py-2',
+        'file:px-4',
+        'file:rounded-md',
+        'file:border-0',
+        'file:text-sm',
+        'file:font-semibold',
+        'file:bg-blue-50',
+        'file:text-blue-700',
+        'hover:file:bg-blue-100'
+      );
     }
   });
 </script>
