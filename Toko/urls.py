@@ -24,4 +24,5 @@ urlpatterns = [
     path('retur/<int:product_id>/', views.create_return, name='create_return'),
     path('pesanan/<int:pk>/', views.order_detail, name='order_detail'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('get-product-by-barcode/', views.get_product_by_barcode, name='get_product_by_barcode'),
 ]

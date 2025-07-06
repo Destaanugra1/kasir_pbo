@@ -59,7 +59,7 @@ class CustomLoginView(LoginView):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'cost', 'stock', 'category', 'supplier', 'image']
+        fields = ['name', 'description', 'price', 'cost', 'stock', 'category', 'supplier', 'image', 'barcode'] # Pastikan 'barcode' ada di sini
         
 @login_required
 def dashboard(request):
@@ -349,11 +349,6 @@ def add_by_barcode(request):
         return JsonResponse({'status': 'error', 'message': 'Barcode tidak ditemukan.'}, status=400)
 
     try:
-        product = Product.objects.get(barcode=barcode)  # <--- DI SINI
-    except Product.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
-
-    try:
         product = Product.objects.get(barcode=barcode)
     except Product.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
@@ -374,3 +369,27 @@ def add_by_barcode(request):
 
     return JsonResponse({'status': 'success', 'message': 'Produk berhasil ditambahkan ke keranjang.'})
 
+
+# Tambahkan view get_product_by_barcode di sini
+@login_required
+@kasir_only
+def get_product_by_barcode(request):
+    barcode = request.GET.get('barcode')
+    if not barcode:
+        return JsonResponse({'status': 'error', 'message': 'Barcode tidak disediakan.'}, status=400)
+
+    try:
+        product = Product.objects.get(barcode=barcode)
+        return JsonResponse({
+            'status': 'success',
+            'product_id': product.pk,
+            'product_name': product.name,
+            'product_price': float(product.price), # Pastikan ini diubah ke float/string jika decimal
+            'product_stock': product.stock
+        })
+    except Product.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Produk dengan barcode tersebut tidak ditemukan.'}, status=404)
+    except Exception as e:
+        # Untuk debugging, log error lengkap di console server
+        print(f"Error in get_product_by_barcode: {e}")
+        return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan server: {str(e)}'}, status=500)

@@ -3,17 +3,20 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-8">
       <div
-        class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6 shadow-md">
+        class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6 shadow-md"
+      >
         <svg
           class="w-8 h-8 text-gray-700"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24">
+          viewBox="0 0 24 24"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+          />
         </svg>
       </div>
       <h1 class="text-3xl font-semibold text-gray-900 mb-2">Sistem Kasir</h1>
@@ -23,22 +26,37 @@
     <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-gray-800">Scan Barcode Produk</h2>
-        <button
-          onclick="startScan()"
-          class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">
-          Mulai Scan
-        </button>
+        <div class="flex space-x-2">
+          <button
+            id="startButton"
+            onclick="startScan()"
+            class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500"
+          >
+            Mulai Scan
+          </button>
+          <button
+            id="stopButton"
+            onclick="stopScan()"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 hidden"
+          >
+            Stop Scan
+          </button>
+        </div>
       </div>
       <div
         id="qr-reader"
-        class="w-full h-52 rounded-lg overflow-hidden bg-gray-100"></div>
-      <p id="qr-reader-result" class="mt-2 text-sm text-gray-600"></p>
+        class="w-full h-80 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center"
+      >
+        <p class="text-gray-500 text-lg" id="initialMessage">Tekan "Mulai Scan" untuk memulai kamera.</p>
+      </div>
+      <p id="qr-reader-result" class="mt-2 text-sm text-gray-600 text-center"></p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2">
         <div
-          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        >
           <div class="bg-gray-100 px-6 py-4">
             <div class="flex items-center justify-between">
               <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
@@ -53,18 +71,21 @@
             <div class="space-y-4">
               {% for produk in produk_list %}
               <div
-                class="group bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-all duration-200">
+                class="group bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-all duration-200"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-4">
                     <div
-                      class="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                      class="w-14 h-14 bg-gray-200 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200"
+                    >
                       <span class="text-gray-700 font-semibold text-lg"
                         >{{ produk.name|first|upper }}</span
                       >
                     </div>
                     <div>
                       <h3
-                        class="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-200">
+                        class="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-200"
+                      >
                         {{ produk.name }}
                       </h3>
                       <div class="mt-2">
@@ -74,22 +95,26 @@
                           >
                           {% if produk.stock > 10 %}
                           <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          >
                             {{ produk.stock }} tersedia
                           </span>
                           {% elif produk.stock > 5 %}
                           <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800"
+                          >
                             {{ produk.stock }} tersedia
                           </span>
                           {% elif produk.stock > 0 %}
                           <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"
+                          >
                             {{ produk.stock }} tersedia
                           </span>
                           {% else %}
                           <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500">
+                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-500"
+                          >
                             Stok habis
                           </span>
                           {% endif %}
@@ -100,21 +125,25 @@
 
                   <div class="flex items-center space-x-4">
                     <div
-                      class="flex items-center space-x-3 bg-white rounded-xl p-3 border border-gray-200">
+                      class="flex items-center space-x-3 bg-white rounded-xl p-3 border border-gray-200"
+                    >
                       <button
                         type="button"
                         onclick="decreaseQty('qty_{{ produk.pk }}')"
-                        class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
+                        class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700"
+                      >
                         <svg
                           class="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
-                          viewBox="0 0 24 24">
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M20 12H4" />
+                            d="M20 12H4"
+                          />
                         </svg>
                       </button>
 
@@ -126,22 +155,26 @@
                         max="{{ produk.stock }}"
                         value="0"
                         onchange="updateTotal()"
-                        class="w-16 h-10 text-center text-lg font-semibold border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200" />
+                        class="w-16 h-10 text-center text-lg font-semibold border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200"
+                      />
 
                       <button
                         type="button"
                         onclick="increaseQty('qty_{{ produk.pk }}', {{ produk.stock }})"
-                        class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700">
+                        class="w-8 h-8 bg-gray-300 rounded-lg text-gray-700"
+                      >
                         <svg
                           class="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
-                          viewBox="0 0 24 24">
+                          viewBox="0 0 24 24"
+                        >
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -150,7 +183,8 @@
                       <p class="text-sm text-gray-500">Subtotal</p>
                       <p
                         class="text-lg font-semibold text-gray-900"
-                        id="subtotal_{{ produk.pk }}">
+                        id="subtotal_{{ produk.pk }}"
+                      >
                         Rp0
                       </p>
                     </div>
@@ -160,17 +194,20 @@
               {% empty %}
               <div class="text-center py-16">
                 <div
-                  class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
                   <svg
                     class="w-10 h-10 text-gray-400"
                     fill="none"
                     stroke="currentColor"
-                    viewBox="0 0 24 24">
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    />
                   </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">
@@ -186,7 +223,8 @@
             <div class="mt-6 text-center">
               <button
                 type="submit"
-                class="inline-flex items-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200">
+                class="inline-flex items-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200"
+              >
                 Tambah ke Keranjang
               </button>
             </div>
@@ -196,14 +234,16 @@
 
       <div class="lg:col-span-1">
         <div
-          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
+          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8"
+        >
           <div class="bg-gray-100 px-6 py-4">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-semibold text-gray-800">
                 Keranjang Belanja
               </h3>
               <div
-                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+              >
                 <span class="text-gray-700 font-bold text-sm"
                   >{{ keranjang_items|length }}</span
                 >
@@ -216,10 +256,12 @@
             <div class="space-y-4 max-h-96 overflow-y-auto">
               {% for item in keranjang_items %}
               <div
-                class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200">
+                class="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:shadow-sm transition-all duration-200"
+              >
                 <div class="flex items-center space-x-3">
                   <div
-                    class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                    class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center"
+                  >
                     <span class="text-gray-700 font-semibold text-sm"
                       >{{ item.produk.name|first|upper }}</span
                     >
@@ -244,17 +286,20 @@
             {% else %}
             <div class="text-center py-12">
               <div
-                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <svg
                   class="w-8 h-8 text-gray-400"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24">
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2-2v6" />
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2-2v6"
+                  />
                 </svg>
               </div>
               <h4 class="text-lg font-semibold text-gray-900 mb-2">
@@ -282,7 +327,8 @@
               {% csrf_token %}
               <button
                 type="submit"
-                class="w-full inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200">
+                class="w-full inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-white text-lg font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform transition-all duration-200"
+              >
                 Checkout Sekarang
               </button>
             </form>
@@ -298,87 +344,180 @@
 <script>
   let html5QrCode;
   let isScanning = false;
-  const qrCodeRegionId = "qr-reader"; // ID tunggal untuk elemen scanner
-  const qrCodeResultElement = document.getElementById("qr-reader-result"); // Untuk menampilkan hasil scan
+  let scanCooldown = false; // Flag untuk cooldown setelah scan berhasil
+  const COOLDOWN_DURATION = 3000; // 3 detik
+  const qrCodeRegionId = "qr-reader";
+  const qrCodeResultElement = document.getElementById("qr-reader-result");
+  const startButton = document.getElementById("startButton");
+  const stopButton = document.getElementById("stopButton");
+  const initialMessage = document.getElementById("initialMessage");
 
   function startScan() {
     if (isScanning) {
-      console.log("Scanner already running.");
+      console.log("Scanner sudah berjalan.");
+      qrCodeResultElement.textContent = "Scanner sudah berjalan.";
       return;
+    }
+
+    // Pastikan instansi sebelumnya dihentikan jika ada
+    if (html5QrCode) {
+      html5QrCode.stop().catch(e => console.warn("Mencoba menghentikan scanner yang tidak berjalan atau error:", e));
     }
 
     html5QrCode = new Html5Qrcode(qrCodeRegionId);
     isScanning = true;
-    qrCodeResultElement.textContent = "Mulai memindai...";
+    scanCooldown = false; // Reset cooldown
+    qrCodeResultElement.textContent = "Meminta akses kamera dan memulai pemindaian...";
+    initialMessage.classList.add('hidden'); // Sembunyikan pesan awal
+    startButton.classList.add('hidden'); // Sembunyikan tombol "Mulai Scan"
+    stopButton.classList.remove('hidden'); // Tampilkan tombol "Stop Scan"
 
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        // Gunakan kamera pertama atau pilih yang sesuai
-        const cameraId = devices[0].id;
-        html5QrCode.start(
-          cameraId,
-          {
-            fps: 10, // Frames per second
-            qrbox: { width: 250, height: 250 } // Ukuran area scan
-          },
-          (decodedText, decodedResult) => {
-            // Callback sukses
-            console.log(`Scan berhasil: ${decodedText}`);
-            qrCodeResultElement.textContent = `Barcode terdeteksi: ${decodedText}`;
-            html5QrCode.stop().then(() => {
+    Html5Qrcode.getCameras()
+      .then(devices => {
+        if (devices && devices.length) {
+          const rearCamera = devices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('belakang'));
+          const cameraId = rearCamera ? rearCamera.id : devices[0].id;
+          console.log("Menggunakan ID kamera:", cameraId, "Nama:", rearCamera ? rearCamera.label : devices[0].label);
+
+          html5QrCode.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: { width: 300, height: 300 }, // Memperbesar area scan
+              facingMode: { exact: "environment" }
+            },
+            (decodedText, decodedResult) => {
+              // Callback sukses, hanya proses jika tidak dalam cooldown
+              if (!scanCooldown) {
+                console.log(`Scan berhasil: ${decodedText}`);
+                qrCodeResultElement.textContent = `Barcode terdeteksi: ${decodedText}`;
+
+                scanCooldown = true; // Aktifkan cooldown
+                setTimeout(() => {
+                  scanCooldown = false; // Nonaktifkan cooldown setelah 3 detik
+                  qrCodeResultElement.textContent = "Kamera aktif. Siap untuk scan berikutnya.";
+                }, COOLDOWN_DURATION);
+
+                handleScannedBarcode(decodedText);
+              }
+            },
+            (errorMessage) => {
+              // Callback error, biasanya "No codes found", bisa diabaikan untuk noise
+              // console.warn("QR code scanning error (seringkali noise):", errorMessage);
+            }
+          )
+            .catch(err => {
+              console.error("Gagal memulai scanner:", err);
+              if (err.name === "NotAllowedError") {
+                qrCodeResultElement.textContent = "Akses kamera ditolak. Mohon izinkan akses kamera di pengaturan browser Anda.";
+              } else if (err.name === "NotFoundError") {
+                qrCodeResultElement.textContent = "Tidak ada kamera ditemukan di perangkat ini.";
+              } else if (err.name === "NotReadableError") {
+                qrCodeResultElement.textContent = "Kamera sedang digunakan oleh aplikasi lain atau tidak dapat diakses.";
+              } else if (err.name === "OverconstrainedError") {
+                qrCodeResultElement.textContent = "Resolusi kamera tidak dapat diatur sesuai permintaan.";
+              } else {
+                qrCodeResultElement.textContent = `Gagal memulai kamera: ${err.message || 'Error tidak diketahui'}.`;
+              }
               isScanning = false;
-              handleScannedBarcode(decodedText);
-            }).catch(err => {
-              console.error("Gagal menghentikan scanner:", err);
-              isScanning = false;
+              startButton.classList.remove('hidden');
+              stopButton.classList.add('hidden');
+              initialMessage.classList.remove('hidden'); // Tampilkan lagi pesan awal jika gagal
             });
-          },
-          (errorMessage) => {
-            // Callback error (tidak terlalu penting untuk ditampilkan ke user jika hanya noise)
-          }
-        ).catch(err => {
-          console.error("Gagal memulai scanner:", err);
-          qrCodeResultElement.textContent = "Gagal memulai kamera. Pastikan izin kamera diberikan.";
+        } else {
+          qrCodeResultElement.textContent = "Tidak ada kamera terdeteksi di perangkat ini.";
+          console.error("Tidak ada kamera terdeteksi oleh Html5Qrcode.getCameras().");
           isScanning = false;
-        });
-      } else {
-        qrCodeResultElement.textContent = "Tidak ada kamera terdeteksi.";
+          startButton.classList.remove('hidden');
+          stopButton.classList.add('hidden');
+          initialMessage.classList.remove('hidden');
+        }
+      })
+      .catch(err => {
+        console.error("Gagal mendapatkan daftar kamera:", err);
+        qrCodeResultElement.textContent = "Error saat mencoba mengakses daftar kamera. Pastikan browser mendukung MediaDevices API dan izin kamera diberikan.";
         isScanning = false;
-      }
-    }).catch(err => {
-      console.error("Gagal mendapatkan daftar kamera:", err);
-      qrCodeResultElement.textContent = "Error akses kamera.";
-      isScanning = false;
-    });
+        startButton.classList.remove('hidden');
+        stopButton.classList.add('hidden');
+        initialMessage.classList.remove('hidden');
+      });
+  }
+
+  function stopScan() {
+    if (html5QrCode && isScanning) {
+      html5QrCode.stop()
+        .then(() => {
+          isScanning = false;
+          scanCooldown = false;
+          qrCodeResultElement.textContent = "Scanner telah dihentikan.";
+          initialMessage.classList.remove('hidden'); // Tampilkan pesan awal
+          startButton.classList.remove('hidden'); // Tampilkan tombol "Mulai Scan"
+          stopButton.classList.add('hidden'); // Sembunyikan tombol "Stop Scan"
+          console.log("Scanner berhasil dihentikan.");
+        })
+        .catch(err => {
+          console.error("Gagal menghentikan scanner:", err);
+          qrCodeResultElement.textContent = "Gagal menghentikan scanner. Silakan refresh halaman.";
+          isScanning = false;
+          startButton.classList.remove('hidden');
+          stopButton.classList.add('hidden');
+          initialMessage.classList.remove('hidden');
+        });
+    } else {
+      console.log("Scanner tidak berjalan.");
+      qrCodeResultElement.textContent = "Scanner tidak aktif.";
+    }
   }
 
   function handleScannedBarcode(barcode) {
     qrCodeResultElement.textContent = "Memproses barcode...";
-    fetch("{% url 'add-by-barcode' %}?barcode=" + barcode)
+    // Panggil API untuk mendapatkan detail produk berdasarkan barcode
+    fetch(`{% url 'get_product_by_barcode' %}?barcode=${encodeURIComponent(barcode)}`)
       .then(response => {
         if (response.ok) {
           return response.json();
         } else {
-          // Jika response error, tetap coba ambil json untuk pesan error
-          return response.json().then(data => { throw new Error(data.message || 'Produk tidak ditemukan atau error server.'); });
+          return response.json().then(data => {
+            console.error("Server merespon dengan error:", data);
+            throw new Error(data.message || 'Produk tidak ditemukan atau error server.');
+          });
         }
       })
       .then(data => {
         if (data.status === 'success') {
-          qrCodeResultElement.textContent = "✅ Produk berhasil ditambahkan ke keranjang!";
-          setTimeout(() => window.location.reload(), 1000); // reload setelah 1 detik
+          // Jika produk ditemukan, tingkatkan kuantitas input yang sesuai
+          const productId = data.product_id;
+          const qtyInput = document.getElementById(`qty_${productId}`);
+          if (qtyInput) {
+            const currentQty = parseInt(qtyInput.value) || 0;
+            const maxStock = parseInt(qtyInput.max) || Infinity;
+
+            if (currentQty < maxStock) {
+              qtyInput.value = currentQty + 1;
+              updateSubtotal(`qty_${productId}`);
+              updateTotal();
+              qrCodeResultElement.textContent = `✅ ${data.product_name} ditambahkan! Jumlah: ${qtyInput.value}`;
+            } else {
+              qrCodeResultElement.textContent = `⚠️ Stok ${data.product_name} habis atau tidak cukup!`;
+            }
+          } else {
+            qrCodeResultElement.textContent = `Produk dengan barcode ${barcode} tidak ditemukan di daftar.`;
+            console.warn(`Produk dengan ID ${productId} dari barcode ${barcode} tidak ada di DOM.`);
+          }
         } else {
-          qrCodeResultElement.textContent = "❌ " + data.message;
-          setTimeout(() => { qrCodeResultElement.textContent = ""; }, 2000);
+          qrCodeResultElement.textContent = `❌ ${data.message}`;
+          console.error("Respons tidak berhasil:", data.message);
         }
+        // Tidak ada setTimeout untuk reload di sini agar kamera tetap on
       })
       .catch(err => {
-        qrCodeResultElement.textContent = "❌ " + err.message;
-        setTimeout(() => { qrCodeResultElement.textContent = ""; }, 2000);
+        console.error("Error memproses barcode atau mengambil produk:", err);
+        qrCodeResultElement.textContent = `❌ ${err.message || "Terjadi kesalahan yang tidak terduga."}`;
       });
   }
 
-  // JavaScript for Interactive Features (bagian ini sudah baik)
+
+  // JavaScript untuk Fitur Interaktif (tanpa perubahan signifikan, hanya memastikan terintegrasi)
   const productPrices = {
     {% for produk in produk_list %}
     {{ produk.pk }}: {{ produk.price }},
@@ -391,6 +530,7 @@
     if (currentValue > 0) {
       input.value = currentValue - 1;
       updateSubtotal(inputId);
+      updateTotal();
     }
   }
 
@@ -400,8 +540,9 @@
     if (currentValue < maxStock) {
       input.value = currentValue + 1;
       updateSubtotal(inputId);
+      updateTotal();
     } else {
-        alert("Stok tidak mencukupi!");
+      alert("Stok tidak mencukupi!");
     }
   }
 
@@ -420,11 +561,18 @@
 
   function updateTotal() {
     let total = 0;
-    {% for produk in produk_list %}
-    const qty{{ produk.pk }} = parseInt(document.getElementById('qty_{{ produk.pk }}').value) || 0;
-    total += qty{{ produk.pk }} * {{ produk.price }};
-    updateSubtotal('qty_{{ produk.pk }}');
-    {% endfor %}
+    document.querySelectorAll('input[name^="qty_"]').forEach(input => {
+      const productId = input.id.replace('qty_', '');
+      const quantity = parseInt(input.value) || 0;
+      const price = productPrices[productId] || 0;
+      total += quantity * price;
+      updateSubtotal(input.id);
+    });
+
+    const totalElement = document.querySelector('.text-3xl.font-bold.text-gray-800');
+    if (totalElement) {
+      totalElement.textContent = 'Rp' + total.toLocaleString('id-ID');
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function() {
