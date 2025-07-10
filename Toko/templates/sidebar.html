@@ -67,20 +67,20 @@
                 class="fas fa-chart-line text-yellow-300 group-hover:text-white"></i>
               <span>Dashboard</span>
             </a>
-            <a
+            {% comment %} <a
               href="{% url 'user_create' %}"
               class="group flex items-center space-x-3 hover:bg-white/20 px-4 py-3 rounded-xl transition-all duration-300 {% if request.path == '/users/tambah/' %}bg-white/20{% endif %}">
               <i
                 class="fas fa-user-plus text-green-300 group-hover:text-white"></i>
               <span>User Tambah</span>
-            </a>
-            <a
+            </a> {% endcomment %}
+            {% comment %} <a
               href="{% url 'product_create' %}"
               class="group flex items-center space-x-3 hover:bg-white/20 px-4 py-3 rounded-xl transition-all duration-300 {% if request.path == '/produk/tambah/' %}bg-white/20{% endif %}">
               <i
                 class="fas fa-plus-circle text-green-300 group-hover:text-white"></i>
               <span>Tambah Produk</span>
-            </a>
+            </a> {% endcomment %}
             {% endif %}
           </nav>
 
