@@ -1,0 +1,260 @@
+/* Sidebar Styles - Sistem Kasir Toko */
+
+/* Custom CSS for sidebar collapse */
+.sidebar-collapsed {
+  width: 4.5rem !important;
+}
+
+.sidebar-collapsed .sidebar-text {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-20px);
+  white-space: nowrap;
+}
+
+.sidebar-text {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: translateX(0);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-collapsed:hover {
+  width: 18rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-collapsed:hover .sidebar-text {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+  transition-delay: 0.2s;
+}
+
+/* Hide text when collapsed but not hovered */
+.sidebar-collapsed:not(:hover) .sidebar-text {
+  display: none;
+}
+
+/* Ensure icons are centered when collapsed */
+.sidebar-collapsed .nav-link {
+  justify-content: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.sidebar-collapsed:hover .nav-link {
+  justify-content: flex-start;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Toggle button positioning */
+.toggle-button {
+  position: absolute;
+  top: 1.5rem;
+  right: -1rem;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.toggle-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.toggle-button i {
+  font-size: 0.875rem;
+  color: white;
+  transition: transform 0.3s ease;
+}
+
+/* Collapsed state adjustments */
+.sidebar-collapsed .toggle-button {
+  right: -1rem;
+}
+
+/* Logo area styling */
+.sidebar-logo {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed .sidebar-logo {
+  transform: scale(0.8);
+  margin-bottom: 1rem;
+}
+
+.sidebar-collapsed:hover .sidebar-logo {
+  transform: scale(1);
+  margin-bottom: 2rem;
+}
+
+/* Navigation improvements */
+.nav-link {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link:hover {
+  transform: translateX(4px);
+}
+
+.sidebar-collapsed .nav-link:hover {
+  transform: translateX(0);
+}
+
+/* Icon styling */
+.nav-icon {
+  min-width: 1.25rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Smooth transitions */
+#desktopSidebar {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+
+/* Main content margin adjustment */
+.main-content {
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When sidebar is collapsed, reduce the margin */
+.main-content.sidebar-collapsed {
+  margin-left: 4.5rem !important; /* Match collapsed sidebar width */
+}
+
+@media (max-width: 1024px) {
+  .main-content,
+  .main-content.sidebar-collapsed {
+    margin-left: 0 !important;
+  }
+}
+
+/* Tooltip for collapsed state */
+.nav-link[title] {
+  position: relative;
+}
+
+/* Active state styling */
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+/* Logout button improvements */
+.logout-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed .logout-btn {
+  padding: 0.75rem;
+  justify-content: center;
+}
+
+.sidebar-collapsed:hover .logout-btn {
+  padding: 0.75rem 1rem;
+  justify-content: center;
+}
+
+/* Enhanced visual effects */
+.sidebar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(79, 70, 229, 0.1),
+    rgba(124, 58, 237, 0.1),
+    rgba(59, 130, 246, 0.1)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.sidebar-collapsed:hover .sidebar-glow {
+  opacity: 1;
+}
+
+/* Toggle button pulse animation */
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 0 0 8px rgba(79, 70, 229, 0);
+  }
+}
+
+.toggle-button.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 640px) {
+  .toggle-button {
+    width: 1.75rem;
+    height: 1.75rem;
+    right: -0.875rem;
+  }
+
+  .toggle-button i {
+    font-size: 0.75rem;
+  }
+}
+
+/* Accessibility improvements */
+.nav-link:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.toggle-button:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .sidebar-collapsed:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  }
+
+  .toggle-button {
+    border-width: 4px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-text,
+  .nav-link,
+  .toggle-button,
+  .sidebar-logo,
+  #desktopSidebar,
+  .main-content {
+    transition: none;
+  }
+
+  .toggle-button.pulse {
+    animation: none;
+  }
+}
