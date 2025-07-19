@@ -300,7 +300,7 @@ class GetProductByBarcodeView(KasirRequiredMixin, BaseView):
             try:
                 p = Product.objects.get(pk=pk)
                 total_amount += p.price * qty
-                current_cart_item_count += 1
+                current_cart_item_count += qty  # Changed this line to add quantity instead of 1
             except Product.DoesNotExist:
                 pass
         
@@ -370,6 +370,8 @@ class UpdateCartQuantityView(KasirRequiredMixin, BaseView):
                 'product_id': product.pk,
                 'product_name': product.name,
                 'new_qty_in_cart': new_qty,
+                'product_price': float(product.price),
+                'product_stock': product.stock,
                 'subtotal': float(product.price * new_qty),
                 'total_amount': float(total_amount),
                 'total_items': current_cart_item_count,
@@ -391,7 +393,7 @@ class UpdateCartQuantityView(KasirRequiredMixin, BaseView):
             try:
                 p = Product.objects.get(pk=pk)
                 total_amount += p.price * qty
-                current_cart_item_count += 1
+                current_cart_item_count += qty  # Changed this line to add quantity instead of 1
             except Product.DoesNotExist:
                 pass
         
@@ -434,7 +436,7 @@ class RemoveItemFromCartView(KasirRequiredMixin, BaseView):
             try:
                 produk = Product.objects.get(pk=pk)
                 total_amount += produk.price * qty
-                current_cart_item_count += 1
+                current_cart_item_count += qty  # Changed this line to add quantity instead of 1
             except Product.DoesNotExist:
                 pass
         
