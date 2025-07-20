@@ -1,0 +1,721 @@
+{% extends "sidebar.html" %} {% load dict_extras idr static %} {% block content %}
+<link rel="stylesheet" href="{% static 'kasir/kasir.css' %}" />
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <div
+        class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6 shadow-md">
+        <svg
+          class="w-8 h-8 text-gray-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <h1 class="text-3xl font-semibold text-gray-900 mb-2">Sistem Kasir</h1>
+      <p class="text-gray-600">Kelola transaksi dengan mudah</p>
+    </div>
+
+    {% include "kasir/scan.html" %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div
+          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-gray-100 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
+              <div class="text-gray-500 text-sm">
+                <span id="daftar-produk-count"
+                  >{{ keranjang_items|length }}</span
+                >
+                produk
+              </div>
+            </div>
+          </div>
+          {% include "kasir/product_list.html" %}
+        </div>
+      </div>
+      <div class="lg:col-span-1">
+        <div
+          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
+          <div class="bg-gray-100 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-800">
+                Keranjang Belanja
+              </h3>
+              <div
+                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <span
+                  id="cart-item-count"
+                  class="text-gray-700 font-bold text-sm"
+                  >{{ keranjang_items|length }}</span
+                >
+              </div>
+            </div>
+          </div>
+          {% include "kasir/cart.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/html5-qrcode@2.3.7/html5-qrcode.min.js"></script>
+<script>
+  let html5QrCode;
+  let isScanning = false;
+  let scanCooldown = false;
+  const COOLDOWN_DURATION = 3000;
+  const qrCodeRegionId = "qr-reader";
+  const qrCodeResultElement = document.getElementById("qr-reader-result");
+  const startButton = document.getElementById("startButton");
+  const stopButton = document.getElementById("stopButton");
+  const initialMessage = document.getElementById("initialMessage");
+  const scannerFrame = document.getElementById('qr-scanner-frame');
+  const scannerOverlay = document.getElementById('qr-scanner-overlay');
+  const scannerBox = document.getElementById('qr-scanner-box');
+  const scannerCorners = document.getElementById('qr-scanner-corners');
+  const scannerLine = document.getElementById('qr-scanner-line');
+
+  // Mendapatkan CSRF token dari cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // Inisialisasi cache harga produk.
+  const productPrices = {};
+  {% for item in keranjang_items %}
+    productPrices['{{ item.produk.pk }}'] = {{ item.produk.price }};
+  {% endfor %}
+
+  // Fungsi untuk memformat angka menjadi format Rupiah
+  function formatRupiah(amount) {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[^\d.-]/g, '')) : parseFloat(amount);
+    if (isNaN(numAmount)) {
+      return 'Rp 0';
+    }
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(numAmount);
+  }
+
+  // Fungsi untuk memvalidasi input kuantitas
+  function validateQty(inputId, maxStock) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const currentQty = parseInt(input.value) || 0;
+    const minusButton = input.previousElementSibling;
+    const plusButton = input.nextElementSibling;
+
+    if (minusButton && minusButton.tagName === 'BUTTON') {
+      minusButton.disabled = currentQty <= 0;
+      minusButton.classList.toggle('opacity-50', currentQty <= 0);
+      minusButton.classList.toggle('cursor-not-allowed', currentQty <= 0);
+    }
+    if (plusButton && plusButton.tagName === 'BUTTON') {
+      plusButton.disabled = currentQty >= maxStock;
+      plusButton.classList.toggle('opacity-50', currentQty >= maxStock);
+      plusButton.classList.toggle('cursor-not-allowed', currentQty >= maxStock);
+    }
+  }
+
+  // Fungsi scanner overlay
+  function showScannerOverlayElements() {
+      if (scannerFrame) scannerFrame.classList.add('qr-scanner-active');
+      if (scannerOverlay) scannerOverlay.style.display = 'block';
+      if (scannerBox) scannerBox.style.display = 'block';
+      if (scannerCorners) scannerCorners.style.display = 'block';
+      if (scannerLine) scannerLine.style.display = 'block';
+  }
+
+  function hideScannerOverlayElements() {
+      if (scannerFrame) scannerFrame.classList.remove('qr-scanner-active');
+      if (scannerOverlay) scannerOverlay.style.display = 'none';
+      if (scannerBox) scannerBox.style.display = 'none';
+      if (scannerCorners) scannerCorners.style.display = 'none';
+      if (scannerLine) scannerLine.style.display = 'none';
+  }
+
+  window.startScan = function() {
+    if (isScanning) {
+      console.log("Scanner sudah berjalan.");
+      qrCodeResultElement.textContent = "Scanner sudah berjalan.";
+      return;
+    }
+
+    if (html5QrCode) {
+      html5QrCode.stop().catch(e => console.warn("Mencoba menghentikan scanner yang tidak berjalan atau error:", e));
+    }
+
+    html5QrCode = new Html5Qrcode(qrCodeRegionId);
+    isScanning = true;
+    scanCooldown = false;
+    qrCodeResultElement.textContent = "Meminta akses kamera dan memulai pemindaian...";
+    initialMessage.classList.add('hidden');
+    startButton.classList.add('hidden');
+    stopButton.classList.remove('hidden');
+
+    Html5Qrcode.getCameras()
+      .then(devices => {
+        if (devices && devices.length) {
+          const rearCamera = devices.find(device =>
+            device.label.toLowerCase().includes('back') ||
+            device.label.toLowerCase().includes('belakang') ||
+            device.label.toLowerCase().includes('environment')
+          );
+          const cameraId = rearCamera ? rearCamera.id : devices[0].id;
+
+          html5QrCode.start(
+            { deviceId: { exact: cameraId } },
+            {
+              fps: 10,
+              qrbox: { width: 300, height: 300 },
+              disableFlip: true
+            },
+            (decodedText, decodedResult) => {
+              if (!scanCooldown) {
+                qrCodeResultElement.textContent = `Barcode terdeteksi: ${decodedText}`;
+                scanCooldown = true;
+                hideScannerOverlayElements();
+                setTimeout(() => {
+                  scanCooldown = false;
+                  qrCodeResultElement.textContent = "Kamera aktif. Siap untuk scan berikutnya.";
+                  showScannerOverlayElements();
+                }, COOLDOWN_DURATION);
+                handleScannedBarcode(decodedText);
+              }
+            },
+            (errorMessage) => {
+              // Error handling
+            }
+          ).catch(err => {
+            console.error("Gagal memulai scanner:", err);
+            qrCodeResultElement.textContent = `Gagal memulai kamera: ${err.message || 'Error tidak diketahui'}`;
+            isScanning = false;
+            startButton.classList.remove('hidden');
+            stopButton.classList.add('hidden');
+            initialMessage.classList.remove('hidden');
+            hideScannerOverlayElements();
+          });
+
+          setTimeout(() => {
+            if (isScanning) {
+                showScannerOverlayElements();
+            }
+          }, 1000);
+
+        } else {
+          qrCodeResultElement.textContent = "Tidak ada kamera terdeteksi di perangkat ini.";
+          isScanning = false;
+          startButton.classList.remove('hidden');
+          stopButton.classList.add('hidden');
+          initialMessage.classList.remove('hidden');
+          hideScannerOverlayElements();
+        }
+      })
+      .catch(err => {
+        console.error("Gagal mendapatkan daftar kamera:", err);
+        qrCodeResultElement.textContent = "Error saat mencoba mengakses daftar kamera.";
+        isScanning = false;
+        startButton.classList.remove('hidden');
+        stopButton.classList.add('hidden');
+        initialMessage.classList.remove('hidden');
+        hideScannerOverlayElements();
+      });
+  }
+
+  window.stopScan = function() {
+    if (html5QrCode && isScanning) {
+      html5QrCode.stop()
+        .then(() => {
+          isScanning = false;
+          scanCooldown = false;
+          qrCodeResultElement.textContent = "Scanner telah dihentikan.";
+          initialMessage.classList.remove('hidden');
+          startButton.classList.remove('hidden');
+          stopButton.classList.add('hidden');
+          hideScannerOverlayElements();
+        })
+        .catch(err => {
+          qrCodeResultElement.textContent = "Gagal menghentikan scanner. Silakan refresh halaman.";
+          isScanning = false;
+          startButton.classList.remove('hidden');
+          stopButton.classList.add('hidden');
+          initialMessage.classList.remove('hidden');
+          hideScannerOverlayElements();
+        });
+    } else {
+      qrCodeResultElement.textContent = "Scanner tidak aktif.";
+      hideScannerOverlayElements();
+    }
+  }
+
+  // AJAX Functions
+  async function updateQuantityAjax(productId, change, manualValue = null) {
+    console.log(`updateQuantityAjax called with productId: ${productId}, change: ${change}, manualValue: ${manualValue}`);
+
+    let currentQtyInput = document.getElementById(`qty_${productId}`);
+    if (!currentQtyInput) {
+      console.error(`Input element qty_${productId} not found`);
+      return;
+    }
+
+    let newQty;
+    if (manualValue !== null && change === 'manual') {
+      newQty = parseInt(manualValue) || 0;
+    } else {
+      const currentValue = parseInt(currentQtyInput.value) || 0;
+      newQty = currentValue + parseInt(change);
+    }
+
+    console.log(`Current qty: ${currentQtyInput.value}, New qty: ${newQty}`);
+
+    const maxStock = parseInt(currentQtyInput.max) || 999999;
+    if (newQty < 0) newQty = 0;
+    if (newQty > maxStock) {
+      alert(`Stok tidak mencukupi! Maksimal ${maxStock} item.`);
+      newQty = maxStock;
+    }
+
+    const currentInputValue = parseInt(currentQtyInput.value) || 0;
+    if (currentInputValue === newQty && manualValue === null) {
+      console.log('No change needed, skipping update');
+      return;
+    }
+
+    try {
+      console.log('Sending AJAX request...');
+      const response = await fetch("{% url 'update_cart_quantity' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: `product_id=${productId}&new_qty=${newQty}`,
+      });
+
+      const data = await response.json();
+      console.log('AJAX response:', data);
+
+      if (data.status === "success") {
+        console.log(data.message);
+        qrCodeResultElement.textContent = data.message;
+
+        updateUI(
+          data.product_id,
+          data.product_name,
+          parseInt(data.new_qty_in_cart),
+          parseFloat(data.product_price),
+          parseInt(data.product_stock),
+          parseFloat(data.total_amount),
+          parseInt(data.total_items)
+        );
+      } else {
+        alert("Gagal memperbarui kuantitas: " + data.message);
+        qrCodeResultElement.textContent = `Gagal: ${data.message}`;
+        currentQtyInput.value = currentInputValue;
+      }
+    } catch (error) {
+      console.error("Error saat memperbarui kuantitas:", error);
+      alert("Terjadi kesalahan saat berkomunikasi dengan server.");
+      qrCodeResultElement.textContent = `Error: ${error.message}`;
+      currentQtyInput.value = currentInputValue;
+    }
+  }
+
+  async function removeItemAjax(productId) {
+    try {
+      const response = await fetch("{% url 'remove_item_from_cart' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: `product_id=${productId}`,
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        console.log(data.message);
+        qrCodeResultElement.textContent = data.message;
+        updateUI(productId, "", 0, 0, 0, data.total_amount, data.total_items);
+      } else {
+        alert("Gagal menghapus produk: " + data.message);
+        qrCodeResultElement.textContent = `Gagal: ${data.message}`;
+      }
+    } catch (error) {
+      console.error("Error saat menghapus produk:", error);
+      alert("Terjadi kesalahan saat berkomunikasi dengan server.");
+      qrCodeResultElement.textContent = `Error: ${error.message}`;
+    }
+  }
+
+  async function handleScannedBarcode(barcode) {
+    qrCodeResultElement.textContent = "Memproses barcode...";
+
+    try {
+      const response = await fetch(
+        `{% url 'get_product_by_barcode' %}?barcode=${encodeURIComponent(barcode)}`,
+        {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        }
+      );
+      const data = await response.json();
+
+      if (data.status === "success") {
+        const productId = data.product_id;
+        const productName = data.product_name;
+        const productPrice = data.product_price;
+        const productStock = data.product_stock;
+        const newQtyInCart = data.new_qty_in_cart;
+
+        productPrices[productId] = productPrice;
+
+        updateUI(productId, productName, newQtyInCart, productPrice, productStock, data.total_amount, data.total_items);
+        qrCodeResultElement.textContent = `✅ ${productName} ditambahkan! Jumlah: ${newQtyInCart}`;
+
+      } else {
+        qrCodeResultElement.textContent = `❌ ${data.message}`;
+        console.error("Respons tidak berhasil:", data.message);
+      }
+    } catch (err) {
+      console.error("Error memproses barcode atau mengambil produk:", err);
+      qrCodeResultElement.textContent = `❌ ${err.message || "Terjadi kesalahan yang tidak terduga."}`;
+    }
+  }
+
+  // UI Update Functions
+  function updateUI(productId, productName, newQty, productPrice, productStock, totalAmount, totalItems) {
+    console.log(`updateUI called with:`, {productId, productName, newQty, productPrice, productStock, totalAmount, totalItems});
+
+    const safeProductId = String(productId);
+    const safeProductName = String(productName);
+    const safeNewQty = parseInt(newQty) || 0;
+    const safeProductPrice = parseFloat(productPrice) || 0;
+    const safeProductStock = parseInt(productStock) || 0;
+    const safeTotalAmount = parseFloat(totalAmount) || 0;
+    const safeTotalItems = parseInt(totalItems) || 0;
+
+    console.log(`Safe values:`, {safeProductId, safeProductName, safeNewQty, safeProductPrice, safeProductStock, safeTotalAmount, safeTotalItems});
+
+    productPrices[safeProductId] = safeProductPrice;
+
+    let productRowLeft = document.getElementById(`product-row-${safeProductId}`);
+    const daftarProdukList = document.getElementById('daftar-produk-list');
+    const emptyProductListMessage = document.getElementById('empty-product-list-message');
+
+    if (!daftarProdukList) {
+      console.error("Elemen dengan ID 'daftar-produk-list' tidak ditemukan.");
+      return;
+    }
+
+    if (safeNewQty > 0) {
+      if (!productRowLeft) {
+        console.log(`Creating new product row for ${safeProductId}`);
+        productRowLeft = document.createElement('div');
+        productRowLeft.id = `product-row-${safeProductId}`;
+        productRowLeft.className = `group bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200`;
+
+        const priceFormatted = new Intl.NumberFormat('id-ID').format(safeProductPrice);
+
+        productRowLeft.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <span class="text-white font-bold text-lg">${safeProductName.charAt(0).toUpperCase()}</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">${safeProductName}</h3>
+                <div class="mt-2">
+                  <div class="flex items-center space-x-4">
+                    <span class="text-xl font-bold text-blue-600">Rp${priceFormatted}</span>
+                    <span id="stock-status-${safeProductId}" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-2 bg-gray-50 rounded-xl p-2 border border-gray-200">
+                <button type="button" onclick="updateQuantityAjax('${safeProductId}', -1)"
+                  class="w-10 h-10 bg-red-500 hover:bg-red-600 rounded-lg text-white flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                  </svg>
+                </button>
+                <input type="number" id="qty_${safeProductId}" min="0" max="${safeProductStock}" value="${safeNewQty}"
+                  onchange="updateQuantityAjax('${safeProductId}', 'manual', this.value)"
+                  class="w-20 h-10 text-center text-lg font-semibold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200" />
+                <button type="button" onclick="updateQuantityAjax('${safeProductId}', 1)"
+                  class="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-lg text-white flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-300">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500">Subtotal</p>
+                <p class="text-xl font-bold text-gray-900" id="subtotal_${safeProductId}"></p>
+              </div>
+            </div>
+          </div>
+        `;
+        daftarProdukList.appendChild(productRowLeft);
+        if (emptyProductListMessage) emptyProductListMessage.classList.add('hidden');
+      } else {
+        console.log(`Updating existing product row for ${safeProductId}`);
+      }
+
+      const qtyInput = document.getElementById(`qty_${safeProductId}`);
+      if (qtyInput) {
+        console.log(`Updating quantity input from ${qtyInput.value} to ${safeNewQty}`);
+        qtyInput.value = safeNewQty;
+        qtyInput.max = safeProductStock;
+        validateQty(qtyInput.id, safeProductStock);
+      }
+
+      const subtotalElement = document.getElementById(`subtotal_${safeProductId}`);
+      if (subtotalElement) {
+        const subtotal = safeNewQty * safeProductPrice;
+        console.log(`Updating subtotal: ${safeNewQty} x ${safeProductPrice} = ${subtotal}`);
+        subtotalElement.textContent = formatRupiah(subtotal);
+      }
+
+      const stockStatusElement = document.getElementById(`stock-status-${safeProductId}`);
+      if (stockStatusElement) {
+        // Calculate remaining stock: original stock minus quantity in cart
+        const remainingStock = safeProductStock - safeNewQty;
+        const stockText = remainingStock > 0 ? `${remainingStock} tersisa` : 'Stok habis';
+        stockStatusElement.textContent = stockText;
+        stockStatusElement.className = `inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+          remainingStock > 10 ? 'bg-green-100 text-green-800' :
+          remainingStock > 5 ? 'bg-yellow-100 text-yellow-800' :
+          remainingStock > 0 ? 'bg-red-100 text-red-800' :
+          'bg-gray-200 text-gray-500'
+        }`;
+      }
+    } else {
+      console.log(`Removing product row for ${safeProductId}`);
+      if (productRowLeft) productRowLeft.remove();
+    }
+
+    updateCartUI(safeProductId, safeProductName, safeNewQty, safeProductPrice);
+    updateTotalsDisplay(safeTotalAmount, safeTotalItems);
+  }
+
+  function updateCartUI(productId, productName, newQty, productPrice) {
+    console.log(`updateCartUI called with:`, {productId, productName, newQty, productPrice});
+
+    let cartItemDiv = document.getElementById(`cart-item-${productId}`);
+    const keranjangItemsList = document.getElementById('keranjang-items-list');
+
+    if (!keranjangItemsList) {
+      console.error("Elemen dengan ID 'keranjang-items-list' tidak ditemukan.");
+      return;
+    }
+
+    if (newQty > 0) {
+      if (!cartItemDiv) {
+        console.log(`Creating new cart item for ${productId}`);
+        cartItemDiv = document.createElement('div');
+        cartItemDiv.id = `cart-item-${productId}`;
+        cartItemDiv.className = `flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl hover:shadow-md hover:border-blue-300 transition-all duration-300 transform hover:scale-105`;
+
+        const priceFormatted = new Intl.NumberFormat('id-ID').format(productPrice);
+
+        cartItemDiv.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center shadow-sm">
+              <span class="text-blue-700 font-bold text-sm">${productName.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-900 text-sm leading-tight">${productName}</h4>
+              <p class="text-xs text-gray-600 mt-1">
+                <span id="cart-qty-${productId}" class="font-medium text-blue-600">${newQty}</span>
+                <span class="mx-1">×</span>
+                <span class="font-medium" id="cart-price-${productId}">Rp${priceFormatted}</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <p class="font-bold text-gray-900 text-sm" id="cart-subtotal-${productId}"></p>
+            </div>
+            <button type="button" onclick="removeItemAjax('${productId}')"
+              class="w-8 h-8 bg-red-500 hover:bg-red-600 rounded-lg text-white flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110"
+              title="Hapus dari keranjang">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        `;
+        keranjangItemsList.appendChild(cartItemDiv);
+      } else {
+        console.log(`Updating existing cart item for ${productId}`);
+        // Update existing cart item
+        const cartQtyElement = document.getElementById(`cart-qty-${productId}`);
+        const cartPriceElement = document.getElementById(`cart-price-${productId}`);
+
+        if (cartQtyElement) {
+          console.log(`Updating cart quantity from ${cartQtyElement.textContent} to ${newQty}`);
+          cartQtyElement.textContent = newQty;
+        }
+        if (cartPriceElement) {
+          const priceFormatted = new Intl.NumberFormat('id-ID').format(productPrice);
+          console.log(`Updating cart price to Rp${priceFormatted}`);
+          cartPriceElement.textContent = `Rp${priceFormatted}`;
+        }
+      }
+
+      // Always update subtotal
+      const cartSubtotalElement = document.getElementById(`cart-subtotal-${productId}`);
+      if (cartSubtotalElement) {
+        const subtotal = newQty * productPrice;
+        console.log(`Updating cart subtotal: ${newQty} x ${productPrice} = ${subtotal}`);
+        cartSubtotalElement.textContent = formatRupiah(subtotal);
+      }
+    } else {
+      console.log(`Removing cart item for ${productId}`);
+      if (cartItemDiv) cartItemDiv.remove();
+    }
+  }
+
+  function updateTotalsDisplay(totalAmount, totalItems) {
+    const totalPembayaranElement = document.getElementById('total-pembayaran');
+    const cartItemCountElement = document.getElementById('cart-item-count');
+    const daftarProdukCountElement = document.getElementById('daftar-produk-count');
+    const emptyCartMessage = document.getElementById('empty-cart-message');
+    const checkoutSection = document.getElementById('checkout-section');
+    const emptyProductListMessage = document.getElementById('empty-product-list-message');
+
+    if (totalPembayaranElement) totalPembayaranElement.textContent = formatRupiah(totalAmount);
+    if (cartItemCountElement) cartItemCountElement.textContent = totalItems;
+    if (daftarProdukCountElement) daftarProdukCountElement.textContent = totalItems;
+
+    if (totalItems === 0) {
+      if (emptyCartMessage) emptyCartMessage.classList.remove('hidden');
+      if (checkoutSection) checkoutSection.classList.add('hidden');
+      if (emptyProductListMessage) emptyProductListMessage.classList.remove('hidden');
+    } else {
+      if (emptyCartMessage) emptyCartMessage.classList.add('hidden');
+      if (checkoutSection) checkoutSection.classList.remove('hidden');
+      if (emptyProductListMessage) emptyProductListMessage.classList.add('hidden');
+    }
+  }
+
+  // Global function registration
+  window.updateQuantityAjax = updateQuantityAjax;
+  window.removeItemAjax = removeItemAjax;
+  window.formatRupiah = formatRupiah;
+  window.validateQty = validateQty;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const emptyProductListMessage = document.getElementById('empty-product-list-message');
+    const emptyCartMessage = document.getElementById('empty-cart-message');
+    const checkoutSection = document.getElementById('checkout-section');
+    const initialItemCount = parseInt(document.getElementById('cart-item-count').textContent);
+
+    if (initialItemCount > 0) {
+        if (emptyProductListMessage) emptyProductListMessage.classList.add('hidden');
+        if (emptyCartMessage) emptyCartMessage.classList.add('hidden');
+        if (checkoutSection) checkoutSection.classList.remove('hidden');
+    } else {
+        if (emptyProductListMessage) emptyProductListMessage.classList.remove('hidden');
+        if (emptyCartMessage) emptyCartMessage.classList.remove('hidden');
+        if (checkoutSection) checkoutSection.classList.add('hidden');
+    }
+
+    document.querySelectorAll('#daftar-produk-list input[id^="qty_"]').forEach(input => {
+      const productId = input.id.replace('qty_', '');
+      const initialStock = parseInt(input.max) || 0;
+      validateQty(input.id, initialStock);
+
+      input.removeEventListener('change', function(){});
+      input.removeEventListener('input', function(){});
+
+      input.addEventListener('change', function() {
+          updateQuantityAjax(productId, 'manual', this.value);
+      });
+      input.addEventListener('input', function() {
+          validateQty(this.id, parseInt(this.max));
+      });
+    });
+
+    updateTotalsAndCounts();
+  });
+
+  function updateTotalsAndCounts() {
+    let totalAmount = 0;
+    let totalItemsInCart = 0;
+
+    const daftarProdukList = document.getElementById('daftar-produk-list');
+    if (!daftarProdukList) {
+        console.warn("Element 'daftar-produk-list' not found when updating totals.");
+        return;
+    }
+
+    daftarProdukList.querySelectorAll('input[id^="qty_"]').forEach(input => {
+      const productId = input.id.replace('qty_', '');
+      const quantity = parseInt(input.value) || 0;
+      const price = productPrices[productId] || 0;
+
+      if (quantity > 0) {
+        totalAmount += quantity * price;
+        totalItemsInCart += quantity; // Changed this line to add quantity instead of just 1
+      }
+      validateQty(input.id, parseInt(input.max));
+    });
+
+    const totalPembayaranElement = document.getElementById('total-pembayaran');
+    const cartItemCountElement = document.getElementById('cart-item-count');
+    const daftarProdukCountElement = document.getElementById('daftar-produk-count');
+    const emptyCartMessage = document.getElementById('empty-cart-message');
+    const checkoutSection = document.getElementById('checkout-section');
+    const emptyProductListMessage = document.getElementById('empty-product-list-message');
+
+    if (totalPembayaranElement) totalPembayaranElement.textContent = formatRupiah(totalAmount);
+    if (cartItemCountElement) cartItemCountElement.textContent = totalItemsInCart;
+    if (daftarProdukCountElement) daftarProdukCountElement.textContent = totalItemsInCart;
+
+    if (totalItemsInCart === 0) {
+        if (emptyCartMessage) emptyCartMessage.classList.remove('hidden');
+        if (checkoutSection) checkoutSection.classList.add('hidden');
+        if (emptyProductListMessage) emptyProductListMessage.classList.remove('hidden');
+    } else {
+        if (emptyCartMessage) emptyCartMessage.classList.add('hidden');
+        if (checkoutSection) checkoutSection.classList.remove('hidden');
+        if (emptyProductListMessage) emptyProductListMessage.classList.add('hidden');
+    }
+  }
+</script>
+{% endblock %}

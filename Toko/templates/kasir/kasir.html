@@ -1,12 +1,10 @@
-{% extends "sidebar.html" %} 
-{% load dict_extras idr static %} 
-{% block content %}
+{% extends "sidebar.html" %} {% load dict_extras idr static %} {% block content
+%}
 
 <link rel="stylesheet" href="{% static 'kasir/kasir.css' %}" />
 
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    
     <!-- Header Section -->
     {% include "kasir/kasir_header.html" %}
 
@@ -15,15 +13,17 @@
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
       <!-- Product List Section -->
       <div class="lg:col-span-2">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div
+          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div class="bg-gray-100 px-6 py-4">
             <div class="flex items-center justify-between">
               <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
               <div class="text-gray-500 text-sm">
-                <span id="daftar-produk-count">{{ keranjang_items|length }}</span>
+                <span id="daftar-produk-count"
+                  >{{ keranjang_items|length }}</span
+                >
                 produk
               </div>
             </div>
@@ -31,22 +31,29 @@
           {% include "kasir/product_list.html" %}
         </div>
       </div>
-      
+
       <!-- Cart Section -->
       <div class="lg:col-span-1">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
+        <div
+          class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
           <div class="bg-gray-100 px-6 py-4">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-800">Keranjang Belanja</h3>
-              <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                <span id="cart-item-count" class="text-gray-700 font-bold text-sm">{{ keranjang_items|length }}</span>
+              <h3 class="text-lg font-semibold text-gray-800">
+                Keranjang Belanja
+              </h3>
+              <div
+                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <span
+                  id="cart-item-count"
+                  class="text-gray-700 font-bold text-sm"
+                  >{{ keranjang_items|length }}</span
+                >
               </div>
             </div>
           </div>
           {% include "kasir/cart.html" %}
         </div>
       </div>
-      
     </div>
   </div>
 </div>
